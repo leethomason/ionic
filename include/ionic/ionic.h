@@ -33,6 +33,7 @@ public:
     char borderHChar = '-';
     char borderVChar = '|';
     char borderCornerChar = '+';
+    int maxWidth = -1;  // positive will use that value; <0 will use terminal width
 
     struct Column {
         ColType type = ColType::kDynamic;
@@ -48,6 +49,8 @@ private:
     std::vector<Column> _cols;
     std::vector<std::vector<std::string>> _rows;
 
+    int terminalWidth() { return 40; }  // FIXME
+    void computeWidths(std::vector<int>& innerColWidth);
     void printTBBorder(const std::vector<int>& innerColWidth);
 };
 
