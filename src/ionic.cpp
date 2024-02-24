@@ -6,6 +6,12 @@
 
 namespace ionic {
 
+#define TEST(x)                                                 \
+	if (!(x)) {	                                                \
+		printf("ERROR: line %d in %s\n", __LINE__, __FILE__);   \
+        assert(false);                                          \
+	}															
+
 void Ionic::initConsole()
 {
 	// FIXME
@@ -24,9 +30,8 @@ void Ionic::addRow(const std::vector<std::string>& row)
 	_rows.push_back(row);
 }
 
-void Ionic::print()
+void Ionic::computeWidths(std::vector<int>& innerColWidth)
 {
-	std::vector<int> innerColWidth;
 	innerColWidth.resize(_cols.size(), 0);
 
 	for (size_t r = 0; r < _rows.size(); ++r) {
@@ -39,6 +44,46 @@ void Ionic::print()
 			//}
 		}
 	}
+	int w = maxWidth;
+	if (w < 0) {
+		w = terminalWidth();
+	}
+	int innerWidth = w;
+	if (outerBorder)
+		innerWidth -= 4;
+	innerWidth -= 3 * int(_cols.size() - 1);
+
+	int nWrap = 0;
+	for (size_t c = 0; c < _cols.size(); ++c) {
+		if (_cols[c].type == ColType::kWrap) {
+			++nWrap;
+		}
+		else {
+			innerWidth -= innerColWidth[c];
+		}
+	}
+
+	if (innerWidth > 0 && nWrap > 0) {
+		int wrapWidth = innerWidth / nWrap;
+		for (size_t c = 0; c < _cols.size(); ++c) {
+			if (_cols[c].type == ColType::kWrap) {
+				if (nWrap > 1) {
+					innerColWidth[c] = wrapWidth;
+					nWrap--;
+					innerWidth -= wrapWidth;
+				}
+				else {
+					innerColWidth[c] = innerWidth;
+				}
+			}
+		}
+	}
+}
+
+void Ionic::print()
+{
+	std::vector<int> innerColWidth;
+	computeWidths(innerColWidth);
 
 	/*
 		Fixed(1), Dynamic, Wrap
@@ -64,16 +109,16 @@ void Ionic::print()
 			if (c > 0)
 				fmt::print(" {} ", borderVChar);
 
-			if (_cols[c].type == ColType::kFixed) {
+			//if (_cols[c].type == ColType::kFixed) {
 				const std::string& s = _rows[r][c];
 				if (s.size() <= _cols[c].width)
 					fmt::print("{:<{}}", s, _cols[c].width);
 				else
-					fmt::print("{:<{}}", s.substr(0, _cols[c].width - 3) + "...", _cols[c].width);
-			}
-			else {
-				fmt::print("{:<{}}", _rows[r][c], innerColWidth[c]);
-			}
+					fmt::print("{:<}", s.substr(0, _cols[c].width));
+			//}
+			//else {
+			//	fmt::print("{:<{}}", _rows[r][c], innerColWidth[c]);
+			//}
 
 		}
 		if (outerBorder)
