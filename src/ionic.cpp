@@ -18,6 +18,8 @@ void Ionic::setColumnFormat(const std::vector<Ionic::Column>& cols)
 
 void Ionic::addRow(const std::vector<std::string>& row)
 {
+	if (_cols.empty())
+		_cols.resize(row.size(), Column{ ColType::kDynamic, 0 });
 	assert(row.size() == _cols.size());
 	_rows.push_back(row);
 }
@@ -29,12 +31,12 @@ void Ionic::print()
 
 	for (size_t r = 0; r < _rows.size(); ++r) {
 		for (size_t c = 0; c < _cols.size(); ++c) {
-			if (_cols[c].type == ColType::kFixed) {
-				innerColWidth[c] = std::max(innerColWidth[c], _cols[c].width);
-			}
-			else {
-				innerColWidth[c] = std::max(innerColWidth[c], (int)_rows[r][c].size());
-			}
+			//if (_cols[c].type == ColType::kFixed) {
+			//	innerColWidth[c] = std::max(innerColWidth[c], _cols[c].width);
+			//}
+			//else {
+			//	innerColWidth[c] = std::max(innerColWidth[c], (int)_rows[r][c].size());
+			//}
 		}
 	}
 

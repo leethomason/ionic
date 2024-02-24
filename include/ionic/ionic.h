@@ -20,7 +20,6 @@ enum class Color : uint8_t {
 enum class ColType {
     kDynamic,       // as wide as needed
     kFixed, 	    // set, fixed width
-    kWrap,          // wrap text    
 };
 
 class Ionic {
@@ -36,7 +35,7 @@ public:
 
     struct Column {
         ColType type = ColType::kDynamic;
-        int width = 0;
+        int requestedWidth = 0;
     };
 
     void setColumnFormat(const std::vector<Column>& cols);
