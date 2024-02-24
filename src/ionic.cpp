@@ -3,6 +3,8 @@
 #include <fmt/core.h>
 
 #include <assert.h>
+#include <algorithm>
+#include <numeric>
 
 namespace ionic {															
 
@@ -35,7 +37,6 @@ void Ionic::setColumnFormat(const std::vector<Ionic::Column>& cols)
 	return n;
 }
 
-
 void Ionic::addRow(const std::vector<std::string>& row)
 {
 	if (_cols.empty()) {
@@ -52,75 +53,54 @@ void Ionic::addRow(const std::vector<std::string>& row)
 		normalizeNL(c.text);
 		trimRight(c.text);		// right trailing spaces are presumably extraneous
 
-		int mw = 0;
-		int nSub = nSubStrings(c.text, mw);
-		c.wrap = nSub > 1;
-		c.desiredWidth = mw;
+		c.nLines = nSubStrings(c.text, c.desiredWidth);
 	}
+	_rows.push_back(r);
 }
 
-void Ionic::computeWidths(std::vector<int>& innerColWidth)
+std::vector<int> Ionic::computeWidths(int w) const
 {
-	innerColWidth.resize(_cols.size(), 0);
+	std::vector<int> inner(_cols.size(), 0);
 
-	for (size_t r = 0; r < _rows.size(); ++r) {
-		for (size_t c = 0; c < _cols.size(); ++c) {
-			//if (_cols[c].type == ColType::kFixed) {
-			//	innerColWidth[c] = std::max(innerColWidth[c], _cols[c].width);
-			//}
-			//else {
-			//	innerColWidth[c] = std::max(innerColWidth[c], (int)_rows[r][c].size());
-			//}
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		const Column& c = _cols[i];
+		if (c.type == ColType::kFixed) {
+			inner[i] = c.requestedWidth;
 		}
-	}
-	int w = maxWidth;
-	if (w < 0) {
-		w = terminalWidth();
-	}
-	int innerWidth = w;
-	if (outerBorder)
-		innerWidth -= 4;
-	innerWidth -= 3 * int(_cols.size() - 1);
-
-	int nWrap = 0;
-	for (size_t c = 0; c < _cols.size(); ++c) {
-		//if (_cols[c].type == ColType::kWrap) {
-		//	++nWrap;
-		//}
-		//else {
-			innerWidth -= innerColWidth[c];
-		//}
-	}
-	/*
-	if (innerWidth > 0 && nWrap > 0) {
-		int wrapWidth = innerWidth / nWrap;
-		for (size_t c = 0; c < _cols.size(); ++c) {
-			if (_cols[c].type == ColType::kWrap) {
-				if (nWrap > 1) {
-					innerColWidth[c] = wrapWidth;
-					nWrap--;
-					innerWidth -= wrapWidth;
-				}
-				else {
-					innerColWidth[c] = innerWidth;
-				}
+		else {
+			inner[i] = 0;
+			for (size_t j = 0; j < _rows.size(); ++j) {
+				inner[i] = std::max(inner[i], _rows[j][i].desiredWidth);
 			}
 		}
 	}
-	*/
+	if (std::accumulate(inner.begin(), inner.end(), 0) <= w) {
+		return inner;
+	}
+
+	// FIXME: shrink the columns
+
+	return inner;
 }
 
 void Ionic::print()
 {
-	std::vector<int> innerColWidth;
-	computeWidths(innerColWidth);
+	if (_cols.empty() || _rows.empty()) {
+		return;
+	}
 
+	int outerWidth = maxWidth > 0 ? maxWidth : terminalWidth();
+	int innerWidth = outerWidth;
+	if (outerBorder)
+		innerWidth -= 2 * 2;	// 2 for each border
+	innerWidth -= 3 * (_cols.size() - 1);	// 3 for each inner border
+
+	std::vector<int> innerColWidth = computeWidths(innerWidth);
+	
 	/*
 		Fixed(1), Dynamic, Wrap
 		Inner
 		  1   5       15
-		Outer
-		 4,2  8,2    17,2               extra x
 		+---+-------+-----------------+
 	    | 0 | A     | The Outer World |
 		+---+-------+-----------------+

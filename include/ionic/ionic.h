@@ -19,7 +19,7 @@ enum class Color : uint8_t {
 
 enum class ColType {
     kDynamic,       // as wide as needed
-    kFixed, 	    // set, fixed width
+    kFixed, 	    // specified width
 };
 
 class Ionic {
@@ -59,7 +59,7 @@ private:
     struct Cell {
 		std::string text;
         int desiredWidth = 0;
-        bool wrap = false;
+        int nLines = 0;
 	};
 
     std::string _buf;
@@ -67,7 +67,7 @@ private:
     std::vector<std::vector<Cell>> _rows;
 
     int terminalWidth() { return 40; }  // FIXME
-    void computeWidths(std::vector<int>& innerColWidth);
+    std::vector<int> computeWidths(int w) const;   // returns inner column sizes for the given w (width)
     void printTBBorder(const std::vector<int>& innerColWidth);
 };
 
