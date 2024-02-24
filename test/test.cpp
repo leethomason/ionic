@@ -14,9 +14,11 @@ int main(const char* argv[], int argc) {
     //fmt::print("Hello, World!");
 
     ionic::Ionic::initConsole();
+    ionic::Ionic::test();
+
     ionic::Ionic table;
 
-    table.setColumnFormat({ {ionic::ColType::kFixed, 2}, {ionic::ColType::kDynamic}, {ionic::ColType::kWrap} });
+    table.setColumnFormat({ {ionic::ColType::kFixed, 2}, {ionic::ColType::kDynamic}, {ionic::ColType::kDynamic} });
     table.addRow({ "0", "A", "The Outer World" });
     table.addRow({ "1", "Hello", "And Another" });
 
@@ -45,9 +47,9 @@ int main(const char* argv[], int argc) {
     ionic::Ionic t5;
     t5.setColumnFormat({ {ionic::ColType::kFixed, 1}, 
                          {ionic::ColType::kFixed, 4},
-                         {ionic::ColType::kWrap}, 
+                         {ionic::ColType::kDynamic},
                          {ionic::ColType::kDynamic}, 
-                         {ionic::ColType::kWrap} });
+                         {ionic::ColType::kDynamic} });
     t5.addRow({ "1", "F4", "Wrap", "Dyn", "Wrap" });
     t5.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen."});
     t5.print();

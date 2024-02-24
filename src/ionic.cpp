@@ -4,13 +4,7 @@
 
 #include <assert.h>
 
-namespace ionic {
-
-#define TEST(x)                                                 \
-	if (!(x)) {	                                                \
-		printf("ERROR: line %d in %s\n", __LINE__, __FILE__);   \
-        assert(false);                                          \
-	}															
+namespace ionic {															
 
 void Ionic::initConsole()
 {
@@ -22,12 +16,47 @@ void Ionic::setColumnFormat(const std::vector<Ionic::Column>& cols)
 	_cols = cols;
 }
 
+/*static*/ int Ionic::nSubStrings(const std::string& s, int& maxWidth)
+{
+	int n = 0;
+	maxWidth = 0;
+	size_t pos = 0;
+
+	while (pos < s.size()) {
+		size_t next = s.find('\n', pos);
+		if (next == std::string::npos) {
+			next = s.size();
+		}
+		n++;
+		size_t w = next - pos;
+		maxWidth = std::max(maxWidth, (int)w);
+		pos = next + 1;
+	}
+	return n;
+}
+
+
 void Ionic::addRow(const std::vector<std::string>& row)
 {
-	if (_cols.empty())
-		_cols.resize(row.size(), Column{ ColType::kDynamic, 0 });
+	if (_cols.empty()) {
+		std::vector<Ionic::Column> cvec;
+		cvec.resize(row.size(), Column{ ColType::kDynamic, 0 });
+		setColumnFormat(cvec);
+	}
 	assert(row.size() == _cols.size());
-	_rows.push_back(row);
+	
+	std::vector<Cell> r(row.size());
+	for(size_t i=0; i<row.size(); ++i) {
+		Cell& c = r[i];
+		c.text = row[i];
+		normalizeNL(c.text);
+		trimRight(c.text);		// right trailing spaces are presumably extraneous
+
+		int mw = 0;
+		int nSub = nSubStrings(c.text, mw);
+		c.wrap = nSub > 1;
+		c.desiredWidth = mw;
+	}
 }
 
 void Ionic::computeWidths(std::vector<int>& innerColWidth)
@@ -55,14 +84,14 @@ void Ionic::computeWidths(std::vector<int>& innerColWidth)
 
 	int nWrap = 0;
 	for (size_t c = 0; c < _cols.size(); ++c) {
-		if (_cols[c].type == ColType::kWrap) {
-			++nWrap;
-		}
-		else {
+		//if (_cols[c].type == ColType::kWrap) {
+		//	++nWrap;
+		//}
+		//else {
 			innerWidth -= innerColWidth[c];
-		}
+		//}
 	}
-
+	/*
 	if (innerWidth > 0 && nWrap > 0) {
 		int wrapWidth = innerWidth / nWrap;
 		for (size_t c = 0; c < _cols.size(); ++c) {
@@ -78,6 +107,7 @@ void Ionic::computeWidths(std::vector<int>& innerColWidth)
 			}
 		}
 	}
+	*/
 }
 
 void Ionic::print()
@@ -109,17 +139,12 @@ void Ionic::print()
 			if (c > 0)
 				fmt::print(" {} ", borderVChar);
 
-			//if (_cols[c].type == ColType::kFixed) {
-				const std::string& s = _rows[r][c];
-				if (s.size() <= _cols[c].width)
-					fmt::print("{:<{}}", s, _cols[c].width);
-				else
-					fmt::print("{:<}", s.substr(0, _cols[c].width));
-			//}
-			//else {
-			//	fmt::print("{:<{}}", _rows[r][c], innerColWidth[c]);
-			//}
-
+			const std::string& s = _rows[r][c].text;
+			int width = innerColWidth[c];
+			if (s.size() <= width)
+				fmt::print("{:<{}}", s, width);
+			else
+				fmt::print("{:<}", s.substr(0, width));
 		}
 		if (outerBorder)
 			fmt::print(" {}", borderVChar);
@@ -152,5 +177,36 @@ void Ionic::printTBBorder(const std::vector<int>& innerColWidth)
 	}
 	fmt::print("{}\n", _buf);
 }
+
+#define TEST(x)                                                 \
+	if (!(x)) {	                                                \
+		printf("ERROR: line %d in %s\n", __LINE__, __FILE__);   \
+        assert(false);                                          \
+		return false;										    \
+	}
+
+/*static*/ bool Ionic::test()
+{
+	std::string t0 = "This\r\nis multi-line\n\rstring\n\r  \n";
+	normalizeNL(t0);
+	TEST(t0.find('\r') == std::string::npos);
+	TEST(!t0.empty());
+
+	trimRight(t0);
+	TEST(t0 == "This\nis multi-line\nstring");
+
+	int max = 0;
+	int nSub = nSubStrings(t0, max);
+	TEST(nSub == 3);
+	TEST(max == 13);
+
+	std::string t1 = "Hello";
+	nSub = nSubStrings(t1, max);
+	TEST(nSub == 1);
+	TEST(max == 5);
+
+	return true;
+}
+
 
 }  // namespace ionic
