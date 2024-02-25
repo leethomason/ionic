@@ -68,18 +68,65 @@ std::vector<int> Ionic::computeWidths(int w) const
 			inner[i] = c.requestedWidth;
 		}
 		else {
-			inner[i] = 0;
 			for (size_t j = 0; j < _rows.size(); ++j) {
 				inner[i] = std::max(inner[i], _rows[j][i].desiredWidth);
 			}
 		}
 	}
 	if (std::accumulate(inner.begin(), inner.end(), 0) <= w) {
-		return inner;
+		return inner; // enough space - no allocation needed
 	}
 
-	// FIXME: shrink the columns
+	// Extract the dynamic columns, remove the fixed ones, and compute the space available.
+	struct ColInfo {
+		int index;
+		int width;
+	};
+	std::vector<ColInfo> dynCols;
+	int avail = w;
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		const Column& c = _cols[i];
+		if (c.type == ColType::kFixed) {
+			avail -= c.requestedWidth;
+		}
+		else {
+			dynCols.push_back({ (int)i, inner[i] });
+		}
+	}
+	if (avail <= dynCols.size() * kMinWidth) {
+		// No space. We are out of luck.
+		for (const auto& ci : dynCols)
+			inner[ci.index] = kMinWidth;
+		return inner;
+	}
+	int grant = avail / (int)dynCols.size();
+	assert(grant >= kMinWidth);
 
+	// Any column that is less the grant can be removed from the pool.
+	dynCols.erase(std::remove_if(dynCols.begin(), dynCols.end(), 
+		[grant](const ColInfo& ci) { return ci.width < grant; }), dynCols.end());
+
+	if (dynCols.empty())
+		return inner;
+
+	// recompute grant
+	grant = avail / (int)dynCols.size();
+
+	for (size_t i = 0; i < dynCols.size(); ++i) {
+		if (i == dynCols.size() - 1) {
+			inner[dynCols[i].index] = avail;
+		}
+		else {
+			if (inner[dynCols[i].index] < grant) {
+				avail -= inner[dynCols[i].index];
+			}
+			else {
+				inner[dynCols[i].index] = grant;
+				avail -= grant;
+			}
+
+		}
+	}
 	return inner;
 }
 
@@ -93,7 +140,7 @@ void Ionic::print()
 	int innerWidth = outerWidth;
 	if (outerBorder)
 		innerWidth -= 2 * 2;	// 2 for each border
-	innerWidth -= 3 * (_cols.size() - 1);	// 3 for each inner border
+	innerWidth -= 3 * int(_cols.size() - 1);	// 3 for each inner border
 
 	std::vector<int> innerColWidth = computeWidths(innerWidth);
 	

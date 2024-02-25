@@ -25,14 +25,14 @@ enum class ColType {
 class Ionic {
 public:
     static void initConsole();
-    static std::vector<std::string_view> wordWrap(const std::string& text, int width);
+    static std::vector<std::string> wordWrap(const std::string& text, int width);
 
     bool outerBorder = true;
     bool innerHorizontalDivider = true;
     char borderHChar = '-';
     char borderVChar = '|';
     char borderCornerChar = '+';
-    int  maxWidth = -1;  // positive will use that value; <0 will use terminal width
+    int  maxWidth = -1;  // positive will use that value; <=0 will use terminal width
 
     struct Column {
         ColType type = ColType::kDynamic;
@@ -56,6 +56,8 @@ public:
     static bool test();
 
 private:
+    static constexpr int kMinWidth = 3; // minimum column width (for dynamic columns)
+
     struct Cell {
 		std::string text;
         int desiredWidth = 0;

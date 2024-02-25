@@ -45,13 +45,17 @@ int main(const char* argv[], int argc) {
     fmt::print("\n\n");
 
     ionic::Ionic t5;
+    static const int kWidth = 50;
+    t5.maxWidth = kWidth;
     t5.setColumnFormat({ {ionic::ColType::kFixed, 1}, 
                          {ionic::ColType::kFixed, 4},
                          {ionic::ColType::kDynamic},
                          {ionic::ColType::kDynamic}, 
                          {ionic::ColType::kDynamic} });
-    t5.addRow({ "1", "F4", "Wrap", "Dyn", "Wrap" });
+    t5.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
     t5.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen."});
     t5.print();
+    fmt::print("{:>{}}", ".", kWidth);
+
     return 0;
 }
