@@ -18,7 +18,7 @@ void Ionic::setColumnFormat(const std::vector<Ionic::Column>& cols)
 	_cols = cols;
 }
 
-/*static*/ int Ionic::nSubStrings(const std::string& s, int& maxWidth)
+/*static*/ int Ionic::nLines(const std::string& s, int& maxWidth)
 {
 	int n = 0;
 	maxWidth = 0;
@@ -53,7 +53,7 @@ void Ionic::addRow(const std::vector<std::string>& row)
 		normalizeNL(c.text);
 		trimRight(c.text);		// right trailing spaces are presumably extraneous
 
-		c.nLines = nSubStrings(c.text, c.desiredWidth);
+		c.nLines = nLines(c.text, c.desiredWidth);
 	}
 	_rows.push_back(r);
 }
@@ -78,11 +78,7 @@ std::vector<int> Ionic::computeWidths(int w) const
 	}
 
 	// Extract the dynamic columns, remove the fixed ones, and compute the space available.
-	struct ColInfo {
-		int index;
-		int width;
-	};
-	std::vector<ColInfo> dynCols;
+	std::vector<int> dynCols;
 	int avail = w;
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		const Column& c = _cols[i];
@@ -90,13 +86,13 @@ std::vector<int> Ionic::computeWidths(int w) const
 			avail -= c.requestedWidth;
 		}
 		else {
-			dynCols.push_back({ (int)i, inner[i] });
+			dynCols.push_back((int)i);
 		}
 	}
 	if (avail <= dynCols.size() * kMinWidth) {
 		// No space. We are out of luck.
 		for (const auto& ci : dynCols)
-			inner[ci.index] = kMinWidth;
+			inner[ci] = kMinWidth;
 		return inner;
 	}
 	int grant = avail / (int)dynCols.size();
@@ -104,7 +100,7 @@ std::vector<int> Ionic::computeWidths(int w) const
 
 	// Any column that is less the grant can be removed from the pool.
 	dynCols.erase(std::remove_if(dynCols.begin(), dynCols.end(), 
-		[grant](const ColInfo& ci) { return ci.width < grant; }), dynCols.end());
+		[grant, inner](int ci) { return inner[ci] <= grant; }), dynCols.end());
 
 	if (dynCols.empty())
 		return inner;
@@ -114,20 +110,66 @@ std::vector<int> Ionic::computeWidths(int w) const
 
 	for (size_t i = 0; i < dynCols.size(); ++i) {
 		if (i == dynCols.size() - 1) {
-			inner[dynCols[i].index] = avail;
+			inner[dynCols[i]] = avail;
 		}
 		else {
-			if (inner[dynCols[i].index] < grant) {
-				avail -= inner[dynCols[i].index];
+			if (inner[dynCols[i]] < grant) {
+				avail -= inner[dynCols[i]];
 			}
 			else {
-				inner[dynCols[i].index] = grant;
+				inner[dynCols[i]] = grant;
 				avail -= grant;
 			}
 
 		}
 	}
 	return inner;
+}
+
+/*static*/ Ionic::Break Ionic::lineBreak(const std::string& text, size_t start, size_t end, int width)
+{
+	assert(text.size() == end || text[end] == '\n');
+
+	size_t pos = start;
+	size_t next = start;
+	size_t ws = start;
+
+	while (ws < end) {
+		next = text.find_first_of(kSpace, pos + 1);
+		if (next == std::string::npos) next = end;
+		ws = text.find_first_not_of(kSpace, next + 1) - 1;
+		ws = std::min(ws, end);
+
+		if (next - start >= width) {
+			return Break{ start, next, ws };
+		}
+		pos = next;
+	}
+	return Break{ start, next, end };
+}
+
+/*static*/ std::vector<std::string> Ionic::wordWrap(const std::string& text, int width)
+{
+	std::vector<std::string> lines;
+	size_t start = 0;
+
+	while (start < text.size()) {
+		// Newlines are hard breaks.
+		size_t end = text.find('\n', start);
+		if (end == std::string::npos) end = text.size();
+		size_t trimEnd = text.find_last_not_of(kSpace, end) + 1;
+
+		// If the line fits, record it and move on.
+		if (trimEnd - start <= width) {
+			lines.push_back(text.substr(start, trimEnd - start));
+			start = end + 1;
+			continue;
+		}
+		// fixme
+		break;
+	}
+	return lines;
+
 }
 
 void Ionic::print()
@@ -214,24 +256,47 @@ void Ionic::printTBBorder(const std::vector<int>& innerColWidth)
 
 /*static*/ bool Ionic::test()
 {
-	std::string t0 = "This\r\nis multi-line\n\rstring\n\r  \n";
-	normalizeNL(t0);
-	TEST(t0.find('\r') == std::string::npos);
-	TEST(!t0.empty());
+	{
+		std::string t0 = "This\r\nis multi-line\n\rstring\n\r  \n";
+		normalizeNL(t0);
+		TEST(t0.find('\r') == std::string::npos);
+		TEST(!t0.empty());
 
-	trimRight(t0);
-	TEST(t0 == "This\nis multi-line\nstring");
+		trimRight(t0);
+		TEST(t0 == "This\nis multi-line\nstring");
 
-	int max = 0;
-	int nSub = nSubStrings(t0, max);
-	TEST(nSub == 3);
-	TEST(max == 13);
+		int max = 0;
+		int nSub = nLines(t0, max);
+		TEST(nSub == 3);
+		TEST(max == 13);
+	}
+	{
+		std::string t1 = "Hello";
+		int max = 0;
+		int nSub = nLines(t1, max);
+		TEST(nSub == 1);
+		TEST(max == 5);
+	}
+	{
+					//       0    5    10   15   20   25   30   35   40
+		std::string line0 = "This is a test.";
 
-	std::string t1 = "Hello";
-	nSub = nSubStrings(t1, max);
-	TEST(nSub == 1);
-	TEST(max == 5);
-
+		Break r = lineBreak(line0, 0, line0.size(), 15);
+		TEST(r.start == 0);
+		TEST(r.end == 15);
+		TEST(r.next == 15);
+		
+		r = lineBreak(line0, 0, line0.size(), 100);
+		TEST(r.start == 0);
+		TEST(r.end == 15);
+		TEST(r.next == 15);
+						//   0    5
+		std::string line1 = "Test  ";
+		r = lineBreak(line1, 0, line1.size(), 100);
+		TEST(r.start == 0);
+		TEST(r.end == 4);
+		TEST(r.next == 6);
+	}
 	return true;
 }
 
