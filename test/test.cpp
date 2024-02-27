@@ -16,6 +16,7 @@ int main(const char* argv[], int argc) {
     ionic::Ionic::initConsole();
     ionic::Ionic::test();
 
+    /*
     ionic::Ionic table;
 
     table.setColumnFormat({ {ionic::ColType::kFixed, 2}, {ionic::ColType::kDynamic}, {ionic::ColType::kDynamic} });
@@ -43,7 +44,7 @@ int main(const char* argv[], int argc) {
     t4.innerHorizontalDivider = false;
     t4.print();
     fmt::print("\n\n");
-
+    */
     ionic::Ionic t5;
     static const int kWidth = 50;
     t5.maxWidth = kWidth;

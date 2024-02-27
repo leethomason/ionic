@@ -58,13 +58,14 @@ public:
     // Find the number of lines, and the maximum width of the lines.
     static int nLines(const std::string&, int& maxWidth);
 
-    static std::vector<std::string> wordWrap(const std::string& text, int width);
-
     struct Break {
         size_t start = 0;
         size_t end = 0;
         size_t next = 0;
     };
+
+    static std::vector<Break> wordWrap(const std::string& text, int width);
+
     static Break lineBreak(const std::string& text, size_t start, size_t end, int width);
 
     // --- Testing ---

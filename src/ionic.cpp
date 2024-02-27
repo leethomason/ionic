@@ -128,48 +128,65 @@ std::vector<int> Ionic::computeWidths(int w) const
 
 /*static*/ Ionic::Break Ionic::lineBreak(const std::string& text, size_t start, size_t end, int width)
 {
+	// Don't think about newlines - they are handled by the caller.
+	// (But do check we were called correctly.)
 	assert(text.size() == end || text[end] == '\n');
 
 	size_t pos = start;
+	size_t nextSpace = start;
+	size_t prevSpace = start;
 	size_t next = start;
-	size_t ws = start;
+	size_t prev = start;
 
-	while (ws < end) {
-		next = text.find_first_of(kSpace, pos + 1);
-		if (next == std::string::npos) next = end;
-		ws = text.find_first_not_of(kSpace, next + 1) - 1;
-		ws = std::min(ws, end);
+	while (next < end) {
+		nextSpace = text.find_first_of(kSpace, pos);
+		nextSpace = std::min(nextSpace, end);
+		next = text.find_first_not_of(kSpace, nextSpace + 1);
+		next = std::min(next, end);
 
-		if (next - start >= width) {
-			return Break{ start, next, ws };
+		assert(nextSpace == end || nextSpace < next);
+
+		if (nextSpace - start > width) {
+			if (prev == start) {
+				return Break{ start, nextSpace, next };	// truncate words greater than column width
+			}
+			else {
+				return Break{ start, prevSpace, prev };
+			}
 		}
 		pos = next;
+		prev = next;
+		prevSpace = nextSpace;
 	}
-	return Break{ start, next, end };
+	return Break{ start, nextSpace, next };
 }
 
-/*static*/ std::vector<std::string> Ionic::wordWrap(const std::string& text, int width)
+/*static*/ std::vector<Ionic::Break> Ionic::wordWrap(const std::string& text, int width)
 {
-	std::vector<std::string> lines;
+	std::vector<Break> lines;
 	size_t start = 0;
 
 	while (start < text.size()) {
 		// Newlines are hard breaks.
 		size_t end = text.find('\n', start);
-		if (end == std::string::npos) end = text.size();
-		size_t trimEnd = text.find_last_not_of(kSpace, end) + 1;
+		end = std::min(end, text.size());
 
-		// If the line fits, record it and move on.
-		if (trimEnd - start <= width) {
-			lines.push_back(text.substr(start, trimEnd - start));
+		// Hit a new line.
+		if (end == start) {
+			lines.push_back(Break{ start, start + 1, start + 1});
 			start = end + 1;
 			continue;
 		}
-		// fixme
-		break;
+
+		Break bk = lineBreak(text, start, end, width);
+		if (bk.next < text.size() && text[bk.next] == '\n') {
+			bk.next++;
+		}
+		lines.push_back(bk);
+
+		start = bk.next;
 	}
 	return lines;
-
 }
 
 void Ionic::print()
@@ -201,23 +218,50 @@ void Ionic::print()
 		printTBBorder(innerColWidth);
 
 	for (size_t r = 0; r < _rows.size(); ++r) {
-		if (outerBorder)
-			fmt::print("{} ", borderVChar);
-
+		std::vector<std::vector<Break>> breaks;
+		breaks.resize(_cols.size());
 		for (size_t c = 0; c < _cols.size(); ++c) {
-			if (c > 0)
-				fmt::print(" {} ", borderVChar);
-
 			const std::string& s = _rows[r][c].text;
-			int width = innerColWidth[c];
-			if (s.size() <= width)
-				fmt::print("{:<{}}", s, width);
-			else
-				fmt::print("{:<}", s.substr(0, width));
+			if (_cols[c].type == ColType::kFixed) {
+				breaks[c].push_back(Break{ 0, s.size(), s.size() });
+			}
+			else {
+				breaks[c] = wordWrap(s, innerColWidth[c]);
+			}
 		}
-		if (outerBorder)
-			fmt::print(" {}", borderVChar);
-		fmt::print("\n");
+
+		bool done = false;
+		int line = 0;
+		while (!done) {
+			done = true;
+			if (outerBorder)
+				fmt::print("{} ", borderVChar);
+
+			for (size_t c = 0; c < _cols.size(); ++c) {
+				if (c > 0)
+					fmt::print(" {} ", borderVChar);
+
+				std::string view;
+				if (line < breaks[c].size()) {
+					if (line < breaks[c].size() - 1)
+						done = false;
+					const std::string& str = _rows[r][c].text;
+					view = str.substr(
+						breaks[c][line].start,
+						breaks[c][line].end - breaks[c][line].start);
+				}
+
+				int width = innerColWidth[c];
+				if (view.size() <= width)
+					fmt::print("{:<{}}", view, width);
+				else
+					fmt::print("{:<}", view.substr(0, width));
+			}
+			++line;
+			if (outerBorder)
+				fmt::print(" {}", borderVChar);
+			fmt::print("\n");
+		}
 		if (innerHorizontalDivider && r < _rows.size() - 1)
 			printTBBorder(innerColWidth);
 	}
@@ -278,24 +322,81 @@ void Ionic::printTBBorder(const std::vector<int>& innerColWidth)
 		TEST(max == 5);
 	}
 	{
-					//       0    5    10   15   20   25   30   35   40
+		//                   0    5    10   15   20   25   30   35   40
 		std::string line0 = "This is a test.";
 
 		Break r = lineBreak(line0, 0, line0.size(), 15);
 		TEST(r.start == 0);
 		TEST(r.end == 15);
 		TEST(r.next == 15);
-		
+
 		r = lineBreak(line0, 0, line0.size(), 100);
 		TEST(r.start == 0);
 		TEST(r.end == 15);
 		TEST(r.next == 15);
-						//   0    5
+
+		for (int s = 1; s < 6; s++) {
+			r = lineBreak(line0, 0, line0.size(), s);
+			TEST(r.start == 0 && r.end == 4 && r.next == 5);
+		}
+		r = lineBreak(line0, 0, line0.size(), 5);
+		TEST(r.start == 0 && r.end == 4 && r.next == 5);
+		for (int s = 7; s < 9; s++) {
+			r = lineBreak(line0, 0, line0.size(), s);
+			TEST(r.start == 0 && r.end == 7 && r.next == 8);
+		}
+		for (int s = 9; s < 15; s++) {
+			r = lineBreak(line0, 0, line0.size(), s);
+			TEST(r.start == 0 && r.end == 9 && r.next == 10);
+		}
+
+		r = lineBreak(line0, 0, line0.size(), 15);
+		TEST(r.start == 0 && r.end == 15 && r.next == 15);
+	}
+	{
+		//                   0    5
 		std::string line1 = "Test  ";
-		r = lineBreak(line1, 0, line1.size(), 100);
+		Break r = lineBreak(line1, 0, line1.size(), 100);
 		TEST(r.start == 0);
 		TEST(r.end == 4);
 		TEST(r.next == 6);
+	}
+	{
+		//                   0    5    10   15   20   25   30   35   40
+		std::string line2 = "Prev. Test  ";
+		Break r = lineBreak(line2, 6, line2.size(), 100);
+		TEST(r.start == 6);
+		TEST(r.end == 10);
+		TEST(r.next == line2.size());
+	}
+	{
+		//                   0    5    10   15   20   25   30   35   40   45   50   55   60   65   70   75   80   85   90   95   100
+		std::string line3 = "It was a bright cold day in April, and the clocks were striking thirteen.";
+		//                  "It was a bright"	0, 15, 16
+		//                  "cold day in"       16, 27, 28
+		//                  "April, and the"    28, 42, 43
+		//                  "clocks were"       43, 54, 55
+		//                  "striking"          55, 63, 64
+		//                  "thirteen."	        64, 73, 73
+		std::vector<Break> breaks = wordWrap(line3, 15);
+		TEST(breaks.size() == 6);
+		TEST(breaks[0].start == 0  && breaks[0].end == 15 && breaks[0].next == 16);
+		TEST(breaks[1].start == 16 && breaks[1].end == 27 && breaks[1].next == 28);
+		TEST(breaks[2].start == 28 && breaks[2].end == 42 && breaks[2].next == 43);
+		TEST(breaks[3].start == 43 && breaks[3].end == 54 && breaks[3].next == 55);
+		TEST(breaks[4].start == 55 && breaks[4].end == 63 && breaks[4].next == 64);
+		TEST(breaks[5].start == 64 && breaks[5].end == 73 && breaks[5].next == 73);
+	}
+	{
+		//                   0    5 _ _  10   15   20_   25   30   35 _  40   45   50   55   60   65   70   75   80   85   90   95   100
+		std::string line4 = "A Poem.\n\nTo challenge\nthe line breaker\n";
+		std::vector<Break> breaks = wordWrap(line4, 15);
+		TEST(breaks.size() == 5);
+		TEST(breaks[0].start == 0  && breaks[0].end == 7 && breaks[0].next == 8);
+		TEST(breaks[1].start == 8  && breaks[1].end == 9 && breaks[1].next == 9);
+		TEST(breaks[2].start == 9  && breaks[2].end == 21 && breaks[2].next == 22);
+		TEST(breaks[3].start == 22 && breaks[3].end == 30 && breaks[3].next == 31);
+		TEST(breaks[4].start == 31 && breaks[4].end == 38 && breaks[4].next == 39);
 	}
 	return true;
 }
