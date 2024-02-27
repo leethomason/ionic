@@ -14,7 +14,8 @@ enum class Color : uint8_t {
     blue,
     magenta,
     cyan,
-    default = gray
+    default = gray,
+    none = 0xff
 };
 
 enum class ColType {
@@ -22,16 +23,20 @@ enum class ColType {
     kFixed, 	    // specified width
 };
 
-class Ionic {
-public:
-    static void initConsole();
-
+struct TableOptions {
     bool outerBorder = true;
     bool innerHorizontalDivider = true;
     char borderHChar = '-';
     char borderVChar = '|';
     char borderCornerChar = '+';
     int  maxWidth = -1;  // positive will use that value; <=0 will use terminal width
+};
+
+class Ionic {
+public:
+    static void initConsole();
+
+    TableOptions options;
 
     struct Column {
         ColType type = ColType::kDynamic;
@@ -84,8 +89,8 @@ private:
     std::vector<Column> _cols;
     std::vector<std::vector<Cell>> _rows;
 
-    int terminalWidth() { return 40; }  // FIXME
-    std::vector<int> computeWidths(int w) const;   // returns inner column sizes for the given w (width)
+    int terminalWidth();
+    std::vector<int> computeWidths(const int w) const;   // returns inner column sizes for the given w (width)
     void printTBBorder(const std::vector<int>& innerColWidth);
 };
 

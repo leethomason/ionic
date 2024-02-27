@@ -6,12 +6,42 @@
 #include <algorithm>
 #include <numeric>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <shlobj_core.h>
+#endif
+
 namespace ionic {															
 
 void Ionic::initConsole()
 {
-	// FIXME
+#ifdef _WIN32
+	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD oldMode = 0;
+	GetConsoleMode(handle, &oldMode);
+	DWORD mode = oldMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	SetConsoleMode(handle, mode);
+#endif
 }
+
+int Ionic::terminalWidth()
+{
+#ifdef _WIN32
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+#else
+#	error "Not implemented"
+#endif // _WIN32
+}
+
+#ifdef _WIN32
+// Sigh.
+#undef min
+#undef max
+#endif // _WIN32
+
 
 void Ionic::setColumnFormat(const std::vector<Ionic::Column>& cols)
 {
@@ -58,71 +88,76 @@ void Ionic::addRow(const std::vector<std::string>& row)
 	_rows.push_back(r);
 }
 
-std::vector<int> Ionic::computeWidths(int w) const
+std::vector<int> Ionic::computeWidths(const int w) const
 {
 	std::vector<int> inner(_cols.size(), 0);
+
+	int requiredWidth = 0;
+	int fixedWidth = 0;
+	int nDyn = 0;
 
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		const Column& c = _cols[i];
 		if (c.type == ColType::kFixed) {
 			inner[i] = c.requestedWidth;
+			requiredWidth += c.requestedWidth;
+			fixedWidth += c.requestedWidth;
 		}
 		else {
 			for (size_t j = 0; j < _rows.size(); ++j) {
 				inner[i] = std::max(inner[i], _rows[j][i].desiredWidth);
 			}
+			requiredWidth += kMinWidth;
+			++nDyn;
 		}
 	}
 	if (std::accumulate(inner.begin(), inner.end(), 0) <= w) {
 		return inner; // enough space - no allocation needed
 	}
 
-	// Extract the dynamic columns, remove the fixed ones, and compute the space available.
+	if (requiredWidth >= w) {
+		// Nothing we can do.
+		for (size_t i = 0; i < _cols.size(); ++i) {
+			if (_cols[i].type == ColType::kDynamic) {
+				inner[i] = kMinWidth;
+			}
+		}
+		return inner;
+	}
+
+	int avail = w - fixedWidth;
+	int grant = avail / nDyn;
+
 	std::vector<int> dynCols;
-	int avail = w;
 	for (size_t i = 0; i < _cols.size(); ++i) {
-		const Column& c = _cols[i];
-		if (c.type == ColType::kFixed) {
-			avail -= c.requestedWidth;
-		}
-		else {
-			dynCols.push_back((int)i);
-		}
-	}
-	if (avail <= dynCols.size() * kMinWidth) {
-		// No space. We are out of luck.
-		for (const auto& ci : dynCols)
-			inner[ci] = kMinWidth;
-		return inner;
-	}
-	int grant = avail / (int)dynCols.size();
-	assert(grant >= kMinWidth);
-
-	// Any column that is less the grant can be removed from the pool.
-	dynCols.erase(std::remove_if(dynCols.begin(), dynCols.end(), 
-		[grant, inner](int ci) { return inner[ci] <= grant; }), dynCols.end());
-
-	if (dynCols.empty())
-		return inner;
-
-	// recompute grant
-	grant = avail / (int)dynCols.size();
-
-	for (size_t i = 0; i < dynCols.size(); ++i) {
-		if (i == dynCols.size() - 1) {
-			inner[dynCols[i]] = avail;
-		}
-		else {
-			if (inner[dynCols[i]] < grant) {
-				avail -= inner[dynCols[i]];
+		if (_cols[i].type == ColType::kDynamic) {
+			if (inner[i] <= grant) {
+				avail -= inner[i];
 			}
 			else {
-				inner[dynCols[i]] = grant;
-				avail -= grant;
+				dynCols.push_back((int)i);
 			}
-
 		}
 	}
+
+	if (dynCols.empty()) {
+		assert(std::accumulate(inner.begin(), inner.end(), 0) <= w);
+		return inner;
+	}
+
+	int grant2 = avail / int(dynCols.size());
+	for (size_t i = 0; i < dynCols.size() - 1; ++i) {
+		if (grant2 >= inner[dynCols[i]]) {
+			avail -= inner[dynCols[i]];
+		}
+		else {
+			inner[dynCols[i]] = grant2;
+			avail -= grant2;
+		}
+	}
+	inner[dynCols.back()] = avail;
+
+	assert(std::accumulate(inner.begin(), inner.end(), 0) == w);
 	return inner;
 }
 
@@ -195,9 +230,9 @@ void Ionic::print()
 		return;
 	}
 
-	int outerWidth = maxWidth > 0 ? maxWidth : terminalWidth();
+	int outerWidth = options.maxWidth > 0 ? options.maxWidth : terminalWidth();
 	int innerWidth = outerWidth;
-	if (outerBorder)
+	if (options.outerBorder)
 		innerWidth -= 2 * 2;	// 2 for each border
 	innerWidth -= 3 * int(_cols.size() - 1);	// 3 for each inner border
 
@@ -214,7 +249,7 @@ void Ionic::print()
 		+---+-------+-----------------+ extra y
 	
 	*/
-	if (outerBorder)
+	if (options.outerBorder)
 		printTBBorder(innerColWidth);
 
 	for (size_t r = 0; r < _rows.size(); ++r) {
@@ -234,12 +269,12 @@ void Ionic::print()
 		int line = 0;
 		while (!done) {
 			done = true;
-			if (outerBorder)
-				fmt::print("{} ", borderVChar);
+			if (options.outerBorder)
+				fmt::print("{} ", options.borderVChar);
 
 			for (size_t c = 0; c < _cols.size(); ++c) {
 				if (c > 0)
-					fmt::print(" {} ", borderVChar);
+					fmt::print(" {} ", options.borderVChar);
 
 				std::string view;
 				if (line < breaks[c].size()) {
@@ -258,15 +293,15 @@ void Ionic::print()
 					fmt::print("{:<}", view.substr(0, width));
 			}
 			++line;
-			if (outerBorder)
-				fmt::print(" {}", borderVChar);
+			if (options.outerBorder)
+				fmt::print(" {}", options.borderVChar);
 			fmt::print("\n");
 		}
-		if (innerHorizontalDivider && r < _rows.size() - 1)
+		if (options.innerHorizontalDivider && r < _rows.size() - 1)
 			printTBBorder(innerColWidth);
 	}
 
-	if (outerBorder)
+	if (options.outerBorder)
 		printTBBorder(innerColWidth);
 }
 
@@ -274,18 +309,18 @@ void Ionic::print()
 void Ionic::printTBBorder(const std::vector<int>& innerColWidth)
 {
 	_buf.clear();
-	if (outerBorder) {
+	if (options.outerBorder) {
 		for (size_t c = 0; c < _cols.size(); ++c) {
-			_buf += borderCornerChar;
-			_buf.append(2 + innerColWidth[c], borderHChar);
+			_buf += options.borderCornerChar;
+			_buf.append(2 + innerColWidth[c], options.borderHChar);
 		}
-		_buf += borderCornerChar;
+		_buf += options.borderCornerChar;
 	}
 	else {
-		_buf.append(1 + innerColWidth[0], borderHChar);
+		_buf.append(1 + innerColWidth[0], options.borderHChar);
 		for (size_t c = 1; c < _cols.size(); ++c) {
-			_buf += borderCornerChar;
-			_buf.append(2 + innerColWidth[c], borderHChar);
+			_buf += options.borderCornerChar;
+			_buf.append(2 + innerColWidth[c], options.borderHChar);
 		}
 	}
 	fmt::print("{}\n", _buf);
