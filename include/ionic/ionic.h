@@ -45,6 +45,8 @@ public:
 
     void setColumnFormat(const std::vector<Column>& cols);
     void addRow(const std::vector<std::string>& row);
+
+    std::string format();
     void print();
 
     // -- Constants --
@@ -95,7 +97,7 @@ private:
 
     int terminalWidth();
     std::vector<int> computeWidths(const int w) const;   // returns inner column sizes for the given w (width)
-    void printTBBorder(const std::vector<int>& innerColWidth);
+    void printTBBorder(std::string& s, const std::vector<int>& innerColWidth);
 };
 
 }  // namespace ionic

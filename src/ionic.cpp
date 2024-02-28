@@ -1,10 +1,9 @@
 #include "ionic/ionic.h"
 
-#include <fmt/core.h>
-
 #include <assert.h>
 #include <algorithm>
 #include <numeric>
+#include <iostream>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -42,6 +41,25 @@ int Table::terminalWidth()
 #undef max
 #endif // _WIN32
 
+
+void append(std::string& s, char a, char b) {
+	s.push_back(a);
+	s.push_back(b);
+}
+
+void append(std::string& s, char a, char b, char c) {
+	s.push_back(a);
+	s.push_back(b);
+	s.push_back(c);
+}
+
+void append(std::string& s, const std::string& a, int width)
+{
+	s += a;
+	if (a.size() < width) {
+		s.append(width - a.size(), ' ');
+	}
+}
 
 void Table::setColumnFormat(const std::vector<Table::Column>& cols)
 {
@@ -225,8 +243,14 @@ std::vector<int> Table::computeWidths(const int w) const
 
 void Table::print()
 {
+	std::cout << format();
+}
+
+std::string Table::format()
+{
+	std::string out;
 	if (_cols.empty() || _rows.empty()) {
-		return;
+		return out;
 	}
 
 	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : terminalWidth();
@@ -248,8 +272,11 @@ void Table::print()
 		+---+-------+-----------------+ extra y
 	
 	*/
+
+	out.reserve(outerWidth * _rows.size() * 2);	// rough guess
+
 	if (_options.outerBorder)
-		printTBBorder(innerColWidth);
+		printTBBorder(out, innerColWidth);
 
 	for (size_t r = 0; r < _rows.size(); ++r) {
 		std::vector<std::vector<Break>> breaks;
@@ -263,12 +290,11 @@ void Table::print()
 		int line = 0;
 		while (!done) {
 			done = true;
-			if (_options.outerBorder)
-				fmt::print("{} ", _options.borderVChar);
+			if (_options.outerBorder) append(out, _options.borderVChar, ' ');
 
 			for (size_t c = 0; c < _cols.size(); ++c) {
 				if (c > 0)
-					fmt::print(" {} ", _options.borderVChar);
+					append(out, ' ', _options.borderVChar, ' ');
 
 				std::string view;
 				if (line < breaks[c].size()) {
@@ -282,33 +308,36 @@ void Table::print()
 
 				int width = innerColWidth[c];
 				if (view.size() <= width) {
-					fmt::print("{:<{}}", view, width);
+					append(out, view, width);
 				}
 				else {
 					const std::string ellipsis = kEllipsis;
 					if (width <= ellipsis.size()) {
-						fmt::print("{:<}", ellipsis.substr(0, width));
+						out += ellipsis.substr(0, width);
 					}
 					else {
-						fmt::print("{:<}{}", view.substr(0, width - ellipsis.size()), ellipsis);
+						out += view.substr(0, width - ellipsis.size());
+						out += ellipsis;
 					}
 				}
 			}
 			++line;
 			if (_options.outerBorder)
-				fmt::print(" {}", _options.borderVChar);
-			fmt::print("\n");
+				append(out, ' ', _options.borderVChar);
+			out += '\n';
 		}
 		if (_options.innerHorizontalDivider && r < _rows.size() - 1)
-			printTBBorder(innerColWidth);
+			printTBBorder(out, innerColWidth);
 	}
 
 	if (_options.outerBorder)
-		printTBBorder(innerColWidth);
+		printTBBorder(out, innerColWidth);
+	
+	return out;
 }
 
 
-void Table::printTBBorder(const std::vector<int>& innerColWidth)
+void Table::printTBBorder(std::string& s, const std::vector<int>& innerColWidth)
 {
 	_buf.clear();
 	if (_options.outerBorder) {
@@ -325,7 +354,8 @@ void Table::printTBBorder(const std::vector<int>& innerColWidth)
 			_buf.append(2 + innerColWidth[c], _options.borderHChar);
 		}
 	}
-	fmt::print("{}\n", _buf);
+	s += _buf;
+	s.push_back('\n');
 }
 
 #define TEST(x)                                                 \
