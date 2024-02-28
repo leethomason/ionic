@@ -14,7 +14,7 @@
 
 namespace ionic {															
 
-void Ionic::initConsole()
+void Table::initConsole()
 {
 #ifdef _WIN32
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -25,7 +25,7 @@ void Ionic::initConsole()
 #endif
 }
 
-int Ionic::terminalWidth()
+int Table::terminalWidth()
 {
 #ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -43,12 +43,12 @@ int Ionic::terminalWidth()
 #endif // _WIN32
 
 
-void Ionic::setColumnFormat(const std::vector<Ionic::Column>& cols)
+void Table::setColumnFormat(const std::vector<Table::Column>& cols)
 {
 	_cols = cols;
 }
 
-/*static*/ int Ionic::nLines(const std::string& s, int& maxWidth)
+/*static*/ int Table::nLines(const std::string& s, int& maxWidth)
 {
 	int n = 0;
 	maxWidth = 0;
@@ -66,10 +66,10 @@ void Ionic::setColumnFormat(const std::vector<Ionic::Column>& cols)
 	return n;
 }
 
-void Ionic::addRow(const std::vector<std::string>& row)
+void Table::addRow(const std::vector<std::string>& row)
 {
 	if (_cols.empty()) {
-		std::vector<Ionic::Column> cvec;
+		std::vector<Table::Column> cvec;
 		cvec.resize(row.size(), Column{ ColType::kDynamic, 0 });
 		setColumnFormat(cvec);
 	}
@@ -87,7 +87,7 @@ void Ionic::addRow(const std::vector<std::string>& row)
 	_rows.push_back(r);
 }
 
-std::vector<int> Ionic::computeWidths(const int w) const
+std::vector<int> Table::computeWidths(const int w) const
 {
 	std::vector<int> inner(_cols.size(), 0);
 
@@ -160,7 +160,7 @@ std::vector<int> Ionic::computeWidths(const int w) const
 	return inner;
 }
 
-/*static*/ Ionic::Break Ionic::lineBreak(const std::string& text, size_t start, size_t end, int width)
+/*static*/ Table::Break Table::lineBreak(const std::string& text, size_t start, size_t end, int width)
 {
 	// Don't think about newlines - they are handled by the caller.
 	// (But do check we were called correctly.)
@@ -195,7 +195,7 @@ std::vector<int> Ionic::computeWidths(const int w) const
 	return Break{ start, nextSpace, next };
 }
 
-/*static*/ std::vector<Ionic::Break> Ionic::wordWrap(const std::string& text, int width)
+/*static*/ std::vector<Table::Break> Table::wordWrap(const std::string& text, int width)
 {
 	std::vector<Break> lines;
 	size_t start = 0;
@@ -223,15 +223,15 @@ std::vector<int> Ionic::computeWidths(const int w) const
 	return lines;
 }
 
-void Ionic::print()
+void Table::print()
 {
 	if (_cols.empty() || _rows.empty()) {
 		return;
 	}
 
-	int outerWidth = options.maxWidth > 0 ? options.maxWidth : terminalWidth();
+	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : terminalWidth();
 	int innerWidth = outerWidth;
-	if (options.outerBorder)
+	if (_options.outerBorder)
 		innerWidth -= 2 * 2;	// 2 for each border
 	innerWidth -= 3 * int(_cols.size() - 1);	// 3 for each inner border
 
@@ -248,7 +248,7 @@ void Ionic::print()
 		+---+-------+-----------------+ extra y
 	
 	*/
-	if (options.outerBorder)
+	if (_options.outerBorder)
 		printTBBorder(innerColWidth);
 
 	for (size_t r = 0; r < _rows.size(); ++r) {
@@ -263,12 +263,12 @@ void Ionic::print()
 		int line = 0;
 		while (!done) {
 			done = true;
-			if (options.outerBorder)
-				fmt::print("{} ", options.borderVChar);
+			if (_options.outerBorder)
+				fmt::print("{} ", _options.borderVChar);
 
 			for (size_t c = 0; c < _cols.size(); ++c) {
 				if (c > 0)
-					fmt::print(" {} ", options.borderVChar);
+					fmt::print(" {} ", _options.borderVChar);
 
 				std::string view;
 				if (line < breaks[c].size()) {
@@ -295,34 +295,34 @@ void Ionic::print()
 				}
 			}
 			++line;
-			if (options.outerBorder)
-				fmt::print(" {}", options.borderVChar);
+			if (_options.outerBorder)
+				fmt::print(" {}", _options.borderVChar);
 			fmt::print("\n");
 		}
-		if (options.innerHorizontalDivider && r < _rows.size() - 1)
+		if (_options.innerHorizontalDivider && r < _rows.size() - 1)
 			printTBBorder(innerColWidth);
 	}
 
-	if (options.outerBorder)
+	if (_options.outerBorder)
 		printTBBorder(innerColWidth);
 }
 
 
-void Ionic::printTBBorder(const std::vector<int>& innerColWidth)
+void Table::printTBBorder(const std::vector<int>& innerColWidth)
 {
 	_buf.clear();
-	if (options.outerBorder) {
+	if (_options.outerBorder) {
 		for (size_t c = 0; c < _cols.size(); ++c) {
-			_buf += options.borderCornerChar;
-			_buf.append(2 + innerColWidth[c], options.borderHChar);
+			_buf += _options.borderCornerChar;
+			_buf.append(2 + innerColWidth[c], _options.borderHChar);
 		}
-		_buf += options.borderCornerChar;
+		_buf += _options.borderCornerChar;
 	}
 	else {
-		_buf.append(1 + innerColWidth[0], options.borderHChar);
+		_buf.append(1 + innerColWidth[0], _options.borderHChar);
 		for (size_t c = 1; c < _cols.size(); ++c) {
-			_buf += options.borderCornerChar;
-			_buf.append(2 + innerColWidth[c], options.borderHChar);
+			_buf += _options.borderCornerChar;
+			_buf.append(2 + innerColWidth[c], _options.borderHChar);
 		}
 	}
 	fmt::print("{}\n", _buf);
@@ -335,7 +335,7 @@ void Ionic::printTBBorder(const std::vector<int>& innerColWidth)
 		return false;										    \
 	}
 
-/*static*/ bool Ionic::test()
+/*static*/ bool Table::test()
 {
 	{
 		std::string t0 = "This\r\nis multi-line\n\rstring\n\r  \n";

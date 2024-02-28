@@ -32,16 +32,16 @@ struct TableOptions {
     int  maxWidth = -1;  // positive will use that value; <=0 will use terminal width
 };
 
-class Ionic {
+class Table {
 public:
     static void initConsole();
-
-    TableOptions options;
 
     struct Column {
         ColType type = ColType::kDynamic;
         int requestedWidth = 0;
     };
+
+    Table(const TableOptions& options = TableOptions()) : _options(options) {}
 
     void setColumnFormat(const std::vector<Column>& cols);
     void addRow(const std::vector<std::string>& row);
@@ -88,6 +88,7 @@ private:
         int nLines = 0;
 	};
 
+    TableOptions _options;
     std::string _buf;
     std::vector<Column> _cols;
     std::vector<std::vector<Cell>> _rows;
