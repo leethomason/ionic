@@ -24,7 +24,7 @@ void Table::initConsole()
 #endif
 }
 
-int Table::terminalWidth()
+int Table::terminalWidth() const
 {
 #ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -241,12 +241,12 @@ std::vector<int> Table::computeWidths(const int w) const
 	return lines;
 }
 
-void Table::print()
+void Table::print() const
 {
 	std::cout << format();
 }
 
-std::string Table::format()
+std::string Table::format() const
 {
 	std::string out;
 	if (_cols.empty() || _rows.empty()) {
@@ -337,24 +337,25 @@ std::string Table::format()
 }
 
 
-void Table::printTBBorder(std::string& s, const std::vector<int>& innerColWidth)
+void Table::printTBBorder(std::string& s, const std::vector<int>& innerColWidth) const
 {
-	_buf.clear();
+	std::string buf;
+	buf.clear();
 	if (_options.outerBorder) {
 		for (size_t c = 0; c < _cols.size(); ++c) {
-			_buf += _options.borderCornerChar;
-			_buf.append(2 + innerColWidth[c], _options.borderHChar);
+			buf += _options.borderCornerChar;
+			buf.append(2 + innerColWidth[c], _options.borderHChar);
 		}
-		_buf += _options.borderCornerChar;
+		buf += _options.borderCornerChar;
 	}
 	else {
-		_buf.append(1 + innerColWidth[0], _options.borderHChar);
+		buf.append(1 + innerColWidth[0], _options.borderHChar);
 		for (size_t c = 1; c < _cols.size(); ++c) {
-			_buf += _options.borderCornerChar;
-			_buf.append(2 + innerColWidth[c], _options.borderHChar);
+			buf += _options.borderCornerChar;
+			buf.append(2 + innerColWidth[c], _options.borderHChar);
 		}
 	}
-	s += _buf;
+	s += buf;
 	s.push_back('\n');
 }
 

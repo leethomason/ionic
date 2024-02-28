@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <ostream>
 
 namespace ionic {
 
@@ -46,8 +47,13 @@ public:
     void setColumnFormat(const std::vector<Column>& cols);
     void addRow(const std::vector<std::string>& row);
 
-    std::string format();
-    void print();
+    std::string format() const;
+    void print() const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Table& t) {
+        os << t.format();
+        return os;
+    }
 
     // -- Constants --
     static constexpr char kWhitespace[] = " \t\n\r";
@@ -91,13 +97,12 @@ private:
 	};
 
     TableOptions _options;
-    std::string _buf;
     std::vector<Column> _cols;
     std::vector<std::vector<Cell>> _rows;
 
-    int terminalWidth();
+    int terminalWidth() const;
     std::vector<int> computeWidths(const int w) const;   // returns inner column sizes for the given w (width)
-    void printTBBorder(std::string& s, const std::vector<int>& innerColWidth);
+    void printTBBorder(std::string& s, const std::vector<int>& innerColWidth) const;
 };
 
 }  // namespace ionic

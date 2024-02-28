@@ -1,14 +1,14 @@
 
 #include "ionic/ionic.h"
-#include <fmt/core.h>
+#include <iostream>
 
 
 void PrintRuler(int w)
 {
     for (int i = 0; i < w; i++) {
-		fmt::print("{}", i%10);
+        std::cout << i % 10;
 	}
-    fmt::print("\n");
+    std::cout << std::endl;
 }
 
 void AddVar4Rows(ionic::Table& table)
@@ -26,7 +26,7 @@ void Print4()
         ionic::Table table(options);
         AddVar4Rows(table);
         table.print();
-        fmt::print("\n\n");
+        std::cout << std::endl << std::endl;
     }
     {
         options.outerBorder = false;
@@ -35,7 +35,7 @@ void Print4()
         ionic::Table table(options);
         AddVar4Rows(table);
         table.print();
-        fmt::print("\n\n");
+        std::cout << std::endl << std::endl;
     }
     {
         options.outerBorder = true;
@@ -44,7 +44,7 @@ void Print4()
         ionic::Table table(options);
         AddVar4Rows(table);
         table.print();
-        fmt::print("\n\n");
+        std::cout << std::endl << std::endl;
     }
     {
         options.outerBorder = false;
@@ -53,7 +53,7 @@ void Print4()
         ionic::Table table(options);
         AddVar4Rows(table);
         table.print();
-        fmt::print("\n\n");
+        std::cout << std::endl << std::endl;
     }
 }
 
@@ -117,7 +117,7 @@ int main(const char* argv[], int argc) {
         t6.setColumnFormat({ {ionic::ColType::kFixed, 15} });
         t6.addRow({ "123456789012345" });
         t6.addRow({ "It was a bright cold day in April, and the clocks were striking thirteen." });
-        t6.print();
+        std::cout << t6;
     }
     return 0;
 }
