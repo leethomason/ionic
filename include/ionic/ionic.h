@@ -47,10 +47,14 @@ public:
     void addRow(const std::vector<std::string>& row);
     void print();
 
-    // --- Utility functions --- 
-    // Called automatically. Here as public for convenience.
+    // -- Constants --
     static constexpr char kWhitespace[] = " \t\n\r";
     static constexpr char kSpace[] = " \t";
+    static constexpr char kEllipsis[] = "..";
+    static constexpr int kMinWidth = 3;         // minimum column width for dynamic columns
+
+    // --- Utility functions --- 
+    // Called automatically. Here as public for convenience.
     
     // Remove CR.
     static void normalizeNL(std::string& s) {
@@ -77,7 +81,6 @@ public:
     static bool test();
 
 private:
-    static constexpr int kMinWidth = 3; // minimum column width (for dynamic columns)
 
     struct Cell {
 		std::string text;

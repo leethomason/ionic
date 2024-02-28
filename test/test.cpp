@@ -87,5 +87,18 @@ int main(const char* argv[], int argc) {
         t6.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
         t6.print();
     }
+    {
+        ionic::Ionic t6;
+        t6.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
+        t6.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
+        t6.print();
+    }
+    {
+        ionic::Ionic t6;
+        t6.setColumnFormat({ {ionic::ColType::kFixed, 15} });
+        t6.addRow({ "123456789012345" });
+        t6.addRow({ "It was a bright cold day in April, and the clocks were striking thirteen." });
+        t6.print();
+    }
     return 0;
 }

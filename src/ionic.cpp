@@ -56,9 +56,8 @@ void Ionic::setColumnFormat(const std::vector<Ionic::Column>& cols)
 
 	while (pos < s.size()) {
 		size_t next = s.find('\n', pos);
-		if (next == std::string::npos) {
-			next = s.size();
-		}
+		next = std::min(next, s.size());
+
 		n++;
 		size_t w = next - pos;
 		maxWidth = std::max(maxWidth, (int)w);
@@ -257,12 +256,7 @@ void Ionic::print()
 		breaks.resize(_cols.size());
 		for (size_t c = 0; c < _cols.size(); ++c) {
 			const std::string& s = _rows[r][c].text;
-			if (_cols[c].type == ColType::kFixed) {
-				breaks[c].push_back(Break{ 0, s.size(), s.size() });
-			}
-			else {
-				breaks[c] = wordWrap(s, innerColWidth[c]);
-			}
+			breaks[c] = wordWrap(s, innerColWidth[c]);
 		}
 
 		bool done = false;
@@ -287,10 +281,18 @@ void Ionic::print()
 				}
 
 				int width = innerColWidth[c];
-				if (view.size() <= width)
+				if (view.size() <= width) {
 					fmt::print("{:<{}}", view, width);
-				else
-					fmt::print("{:<}", view.substr(0, width));
+				}
+				else {
+					const std::string ellipsis = kEllipsis;
+					if (width <= ellipsis.size()) {
+						fmt::print("{:<}", ellipsis.substr(0, width));
+					}
+					else {
+						fmt::print("{:<}{}", view.substr(0, width - ellipsis.size()), ellipsis);
+					}
+				}
 			}
 			++line;
 			if (options.outerBorder)
