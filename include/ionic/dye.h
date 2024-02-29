@@ -1,4 +1,7 @@
-#include <fmt/core.h>
+#pragma once
+
+namespace ionic {
+namespace internal {
 
 struct dye
 {
@@ -19,22 +22,6 @@ struct dye
 	static constexpr char purple[] = "\x1B[95m";
 	static constexpr char cyan[] = "\x1B[96m";
 	static constexpr char white[] = "\x1B[97m";
-
-	inline static void test() {
-		fmt::print("{}dark_red{}\n", dark_red, reset);
-		fmt::print("{}dark_green{}\n", dark_green, reset);
-		fmt::print("{}dark_yellow{}\n", dark_yellow, reset);
-		fmt::print("{}dark_blue{}\n", dark_blue, reset);
-		fmt::print("{}dark_purple{}\n", dark_purple, reset);
-		fmt::print("{}dark_cyan{}\n", dark_cyan, reset);
-		fmt::print("{}light_gray{}\n", light_gray, reset);
-		fmt::print("{}dark_gray{}\n", dark_gray, reset);
-		fmt::print("{}red{}\n", red, reset);
-		fmt::print("{}pale_green{}\n", green, reset);
-		fmt::print("{}pale_yellow{}\n", yellow, reset);
-		fmt::print("{}pale_blue{}\n", blue, reset);
-		fmt::print("{}pale_purple{}\n", purple, reset);
-		fmt::print("{}pale_cyan{}\n", cyan, reset);
-		fmt::print("{}white{}\n", white, reset);
-	}
 };
+} // namespace internal
+} // namespace ionic

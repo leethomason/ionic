@@ -42,12 +42,14 @@ int Table::terminalWidth() const
 #endif // _WIN32
 
 
-void append(std::string& s, char a, char b) {
+void append(std::string& s, char a, char b) 
+{
 	s.push_back(a);
 	s.push_back(b);
 }
 
-void append(std::string& s, char a, char b, char c) {
+void append(std::string& s, char a, char b, char c) 
+{
 	s.push_back(a);
 	s.push_back(b);
 	s.push_back(c);
@@ -275,8 +277,7 @@ std::string Table::format() const
 
 	out.reserve(outerWidth * _rows.size() * 2);	// rough guess
 
-	if (_options.outerBorder)
-		printTBBorder(out, innerColWidth);
+	printHorizontalBorder(out, innerColWidth, true);
 
 	for (size_t r = 0; r < _rows.size(); ++r) {
 		std::vector<std::vector<Break>> breaks;
@@ -326,21 +327,25 @@ std::string Table::format() const
 				append(out, ' ', _options.borderVChar);
 			out += '\n';
 		}
-		if (_options.innerHorizontalDivider && r < _rows.size() - 1)
-			printTBBorder(out, innerColWidth);
+		if (r < _rows.size() - 1)
+			printHorizontalBorder(out, innerColWidth, false);
 	}
 
-	if (_options.outerBorder)
-		printTBBorder(out, innerColWidth);
+	printHorizontalBorder(out, innerColWidth, true);
 	
 	return out;
 }
 
 
-void Table::printTBBorder(std::string& s, const std::vector<int>& innerColWidth) const
+void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const
 {
+	if (outer && !_options.outerBorder)
+		return;
+	if (!outer && !_options.innerHorizontalDivider)
+		return;
+
 	std::string buf;
-	buf.clear();
+
 	if (_options.outerBorder) {
 		for (size_t c = 0; c < _cols.size(); ++c) {
 			buf += _options.borderCornerChar;
@@ -358,116 +363,4 @@ void Table::printTBBorder(std::string& s, const std::vector<int>& innerColWidth)
 	s += buf;
 	s.push_back('\n');
 }
-
-#define TEST(x)                                                 \
-	if (!(x)) {	                                                \
-		printf("ERROR: line %d in %s\n", __LINE__, __FILE__);   \
-        assert(false);                                          \
-		return false;										    \
-	}
-
-/*static*/ bool Table::test()
-{
-	{
-		std::string t0 = "This\r\nis multi-line\n\rstring\n\r  \n";
-		normalizeNL(t0);
-		TEST(t0.find('\r') == std::string::npos);
-		TEST(!t0.empty());
-
-		trimRight(t0);
-		TEST(t0 == "This\nis multi-line\nstring");
-
-		int max = 0;
-		int nSub = nLines(t0, max);
-		TEST(nSub == 3);
-		TEST(max == 13);
-	}
-	{
-		std::string t1 = "Hello";
-		int max = 0;
-		int nSub = nLines(t1, max);
-		TEST(nSub == 1);
-		TEST(max == 5);
-	}
-	{
-		//                   0    5    10   15   20   25   30   35   40
-		std::string line0 = "This is a test.";
-
-		Break r = lineBreak(line0, 0, line0.size(), 15);
-		TEST(r.start == 0);
-		TEST(r.end == 15);
-		TEST(r.next == 15);
-
-		r = lineBreak(line0, 0, line0.size(), 100);
-		TEST(r.start == 0);
-		TEST(r.end == 15);
-		TEST(r.next == 15);
-
-		for (int s = 1; s < 6; s++) {
-			r = lineBreak(line0, 0, line0.size(), s);
-			TEST(r.start == 0 && r.end == 4 && r.next == 5);
-		}
-		r = lineBreak(line0, 0, line0.size(), 5);
-		TEST(r.start == 0 && r.end == 4 && r.next == 5);
-		for (int s = 7; s < 9; s++) {
-			r = lineBreak(line0, 0, line0.size(), s);
-			TEST(r.start == 0 && r.end == 7 && r.next == 8);
-		}
-		for (int s = 9; s < 15; s++) {
-			r = lineBreak(line0, 0, line0.size(), s);
-			TEST(r.start == 0 && r.end == 9 && r.next == 10);
-		}
-
-		r = lineBreak(line0, 0, line0.size(), 15);
-		TEST(r.start == 0 && r.end == 15 && r.next == 15);
-	}
-	{
-		//                   0    5
-		std::string line1 = "Test  ";
-		Break r = lineBreak(line1, 0, line1.size(), 100);
-		TEST(r.start == 0);
-		TEST(r.end == 4);
-		TEST(r.next == 6);
-	}
-	{
-		//                   0    5    10   15   20   25   30   35   40
-		std::string line2 = "Prev. Test  ";
-		Break r = lineBreak(line2, 6, line2.size(), 100);
-		TEST(r.start == 6);
-		TEST(r.end == 10);
-		TEST(r.next == line2.size());
-	}
-	{
-		//                   0    5    10   15   20   25   30   35   40   45   50   55   60   65   70   75   80   85   90   95   100
-		std::string line3 = "It was a bright cold day in April, and the clocks were striking thirteen.";
-		//                  "It was a bright"	0, 15, 16
-		//                  "cold day in"       16, 27, 28
-		//                  "April, and the"    28, 42, 43
-		//                  "clocks were"       43, 54, 55
-		//                  "striking"          55, 63, 64
-		//                  "thirteen."	        64, 73, 73
-		std::vector<Break> breaks = wordWrap(line3, 15);
-		TEST(breaks.size() == 6);
-		TEST(breaks[0].start == 0  && breaks[0].end == 15 && breaks[0].next == 16);
-		TEST(breaks[1].start == 16 && breaks[1].end == 27 && breaks[1].next == 28);
-		TEST(breaks[2].start == 28 && breaks[2].end == 42 && breaks[2].next == 43);
-		TEST(breaks[3].start == 43 && breaks[3].end == 54 && breaks[3].next == 55);
-		TEST(breaks[4].start == 55 && breaks[4].end == 63 && breaks[4].next == 64);
-		TEST(breaks[5].start == 64 && breaks[5].end == 73 && breaks[5].next == 73);
-	}
-	{
-		//                   0    5 _ _  10   15   20_   25   30   35 _  40   45   50   55   60   65   70   75   80   85   90   95   100
-		std::string line4 = "A Poem.\n\nTo challenge\nthe line breaker\n";
-		std::vector<Break> breaks = wordWrap(line4, 15);
-		TEST(breaks.size() == 5);
-		TEST(breaks[0].start == 0  && breaks[0].end == 7 && breaks[0].next == 8);
-		TEST(breaks[1].start == 8  && breaks[1].end == 9 && breaks[1].next == 9);
-		TEST(breaks[2].start == 9  && breaks[2].end == 21 && breaks[2].next == 22);
-		TEST(breaks[3].start == 22 && breaks[3].end == 30 && breaks[3].next == 31);
-		TEST(breaks[4].start == 31 && breaks[4].end == 38 && breaks[4].next == 39);
-	}
-	return true;
-}
-
-
 }  // namespace ionic

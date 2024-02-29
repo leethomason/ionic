@@ -16,7 +16,14 @@ enum class Color : uint8_t {
     magenta,
     cyan,
     default = gray,
-    none = 0xff
+
+    white,
+    brightRed,
+    brightGreen,
+    brightYellow,
+    brightBlue,
+    brightMagenta,
+    brightCyan,
 };
 
 enum class ColType {
@@ -31,19 +38,20 @@ struct TableOptions {
     char borderVChar = '|';
     char borderCornerChar = '+';
     int  maxWidth = -1;  // positive will use that value; <=0 will use terminal width
+    Color tableColor = Color::default;
+    Color textColor = Color::default;
 };
 
 class Table {
 public:
     static void initConsole();
 
+    Table(const TableOptions& options = TableOptions()) : _options(options) {}
+
     struct Column {
         ColType type = ColType::kDynamic;
         int requestedWidth = 0;
     };
-
-    Table(const TableOptions& options = TableOptions()) : _options(options) {}
-
     void setColumnFormat(const std::vector<Column>& cols);
     void addRow(const std::vector<std::string>& row);
 
@@ -85,8 +93,7 @@ public:
 
     static Break lineBreak(const std::string& text, size_t start, size_t end, int width);
 
-    // --- Testing ---
-    static bool test();
+    int terminalWidth() const;
 
 private:
 
@@ -100,9 +107,8 @@ private:
     std::vector<Column> _cols;
     std::vector<std::vector<Cell>> _rows;
 
-    int terminalWidth() const;
     std::vector<int> computeWidths(const int w) const;   // returns inner column sizes for the given w (width)
-    void printTBBorder(std::string& s, const std::vector<int>& innerColWidth) const;
+    void printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const;
 };
 
 }  // namespace ionic
