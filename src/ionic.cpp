@@ -63,6 +63,25 @@ void append(std::string& s, const std::string& a, int width)
 	}
 }
 
+void Table::printLeft(std::string& s)
+{
+	if (_options.outerBorder) {
+		append(s, _options.borderVChar, ' ');
+	}
+}
+
+void Table::printRight(std::string& s)
+{
+	if (_options.outerBorder) {
+		append(s, _options.borderVChar, ' ');
+	}
+}
+
+void Table::printCenter(std::string& s)
+{
+	append(s, ' ', _options.borderVChar, ' ');
+}
+
 void Table::setColumnFormat(const std::vector<Table::Column>& cols)
 {
 	_cols = cols;

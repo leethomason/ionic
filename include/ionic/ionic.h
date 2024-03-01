@@ -108,7 +108,11 @@ private:
     std::vector<std::vector<Cell>> _rows;
 
     std::vector<int> computeWidths(const int w) const;   // returns inner column sizes for the given w (width)
+
     void printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const;
+    void printLeft(std::string& s);
+    void printCenter(std::string& s);
+    void printRight(std::string& s);
 };
 
 }  // namespace ionic
