@@ -22,15 +22,15 @@ void AddVar4Rows(ionic::Table& table)
 
 void Print4()
 {
-    ionic::TableOptions options;
 
     {
-        ionic::Table table(options);
+        ionic::Table table;
         AddVar4Rows(table);
         table.print();
         std::cout << std::endl << std::endl;
     }
     {
+        ionic::TableOptions options;
         options.outerBorder = false;
         options.innerHorizontalDivider = true;
 
@@ -40,6 +40,7 @@ void Print4()
         std::cout << std::endl << std::endl;
     }
     {
+        ionic::TableOptions options;
         options.outerBorder = true;
         options.innerHorizontalDivider = false;
 
@@ -49,6 +50,7 @@ void Print4()
         std::cout << std::endl << std::endl;
     }
     {
+        ionic::TableOptions options;
         options.outerBorder = false;
         options.innerHorizontalDivider = false;
 
@@ -198,6 +200,44 @@ int main(const char* argv[], int argc) {
         t5.print();
         PrintRuler(options.maxWidth);
     }
+    {
+        ionic::TableOptions options;
+        options.tableColor = ionic::Color::blue;
+        ionic::Table t(options);
+
+        t.addRow({ "", "Color", "Color", "Color", "Color", "Color", "Color" });
+        t.addRow({ "Normal", "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" });
+        t.addRow({ "Bright", "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" });
+
+        t.setRow(0, { ionic::Color::white }, {});
+        t.setCell(2, 0, { ionic::Color::white }, {});
+
+        t.setCell(1, 1, { ionic::Color::red }, {});
+        t.setCell(2, 1, { ionic::Color::brightRed }, {});
+        t.setCell(1, 2, { ionic::Color::green }, {});
+        t.setCell(2, 2, { ionic::Color::brightGreen }, {});
+        t.setCell(1, 3, { ionic::Color::blue }, {});
+        t.setCell(2, 3, { ionic::Color::brightBlue }, {});
+        t.setCell(1, 4, { ionic::Color::yellow }, {});
+        t.setCell(2, 4, { ionic::Color::brightYellow }, {});
+        t.setCell(1, 5, { ionic::Color::magenta }, {});
+        t.setCell(2, 5, { ionic::Color::brightMagenta }, {});
+        t.setCell(1, 6, { ionic::Color::cyan }, {});
+        t.setCell(2, 6, { ionic::Color::brightCyan }, {});
+
+        t.print();
+    }
+
+    {
+        ionic::Table t;
+        t.setColumnFormat({ {ionic::ColType::kFixed, 10}, {ionic::ColType::kFixed, 10}, {ionic::ColType::kFixed, 10} });
+        t.addRow({ { "This is left aligned text" }, { "This text is center aligned" }, { "And finally this is right aligned" } });
+        t.setColumn(0, {}, { ionic::Alignment::left });
+        t.setColumn(1, {}, { ionic::Alignment::center });
+        t.setColumn(2, {}, { ionic::Alignment::right });
+        t.print();
+    }
+
 #if 0
     {
         ionic::TableOptions options;

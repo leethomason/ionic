@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <optional>
 
 namespace ionic {
 
@@ -15,7 +16,6 @@ enum class Color : uint8_t {
     blue,
     magenta,
     cyan,
-    default = gray,
 
     white,
     brightRed,
@@ -24,6 +24,15 @@ enum class Color : uint8_t {
     brightBlue,
     brightMagenta,
     brightCyan,
+
+    default,
+    reset,
+};
+
+enum class Alignment {
+    left,
+    right,
+    center,
 };
 
 enum class ColType {
@@ -40,10 +49,12 @@ struct TableOptions {
     int  maxWidth = -1;  // positive will use that value; <=0 will use terminal width
     Color tableColor = Color::default;
     Color textColor = Color::default;
+    Alignment alignment = Alignment::left;
 };
 
 class Table {
 public:
+    static bool useColor;
     static void initConsole();
 
     Table(const TableOptions& options = TableOptions()) : _options(options) {}
@@ -54,6 +65,11 @@ public:
     };
     void setColumnFormat(const std::vector<Column>& cols);
     void addRow(const std::vector<std::string>& row);
+
+    void setCell(int row, int col, std::optional<Color>, std::optional<Alignment>);
+    void setRow(int row, std::optional<Color>, std::optional<Alignment>);
+    void setColumn(int col, std::optional<Color>, std::optional<Alignment>);
+    void setTable(std::optional<Color>, std::optional<Alignment>);
 
     std::string format() const;
     void print() const;
@@ -101,7 +117,20 @@ private:
 		std::string text;
         int desiredWidth = 0;
         int nLines = 0;
+        Color color = Color::default;
+        Alignment alignment = Alignment::left;
 	};
+
+    struct Dye {
+        Dye(Color c, std::string& s);
+        ~Dye();
+
+        static const char* colorCode(Color c);
+
+      private:
+		std::string& _s;
+        Color _c;
+    };
 
     TableOptions _options;
     std::vector<Column> _cols;
@@ -110,9 +139,9 @@ private:
     std::vector<int> computeWidths(const int w) const;   // returns inner column sizes for the given w (width)
 
     void printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const;
-    void printLeft(std::string& s);
-    void printCenter(std::string& s);
-    void printRight(std::string& s);
+    void printLeft(std::string& s) const;
+    void printCenter(std::string& s) const;
+    void printRight(std::string& s) const;
 };
 
 }  // namespace ionic

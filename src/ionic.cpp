@@ -13,6 +13,8 @@
 
 namespace ionic {															
 
+bool Table::useColor = true;
+
 void Table::initConsole()
 {
 #ifdef _WIN32
@@ -42,6 +44,41 @@ int Table::terminalWidth() const
 #endif // _WIN32
 
 
+/*static*/const char* Table::Dye::colorCode(Color c)
+{
+	switch (c) {
+	case Color::gray: return "\033[0m";
+	case Color::red: return "\x1B[31m";
+	case Color::green: return "\x1B[32m";
+	case Color::yellow: return "\x1B[33m";
+	case Color::blue: return "\x1B[34m";
+	case Color::magenta: return "\x1B[35m";
+	case Color::cyan: return "\x1B[36m";
+	case Color::white: return "\x1B[97m";
+	case Color::brightRed: return "\x1B[91m";
+	case Color::brightGreen: return "\x1B[92m";
+	case Color::brightYellow: return "\x1B[93m";
+	case Color::brightBlue: return "\x1B[94m";
+	case Color::brightMagenta: return "\x1B[95m";
+	case Color::brightCyan: return "\x1B[96m";
+
+	case Color::default: return "\033[0m";
+	case Color::reset: return "\033[0m";
+	}
+	return "";
+}
+
+Table::Dye::Dye(Color c, std::string& s) : _c(c), _s(s)
+{
+	if (_c != Color::default && Table::useColor)
+		_s += Dye::colorCode(c);
+}
+
+Table::Dye::~Dye() {
+	if (_c != Color::default && Table::useColor)
+		_s += Dye::colorCode(Color::reset);
+}
+
 void append(std::string& s, char a, char b) 
 {
 	s.push_back(a);
@@ -55,30 +92,25 @@ void append(std::string& s, char a, char b, char c)
 	s.push_back(c);
 }
 
-void append(std::string& s, const std::string& a, int width)
-{
-	s += a;
-	if (a.size() < width) {
-		s.append(width - a.size(), ' ');
-	}
-}
-
-void Table::printLeft(std::string& s)
+void Table::printLeft(std::string& s) const
 {
 	if (_options.outerBorder) {
+		Dye dye(_options.tableColor, s);
 		append(s, _options.borderVChar, ' ');
 	}
 }
 
-void Table::printRight(std::string& s)
+void Table::printRight(std::string& s) const
 {
 	if (_options.outerBorder) {
-		append(s, _options.borderVChar, ' ');
+		Dye dye(_options.tableColor, s);
+		append(s, ' ', _options.borderVChar);
 	}
 }
 
-void Table::printCenter(std::string& s)
+void Table::printCenter(std::string& s) const
 {
+	Dye dye(_options.tableColor, s);
 	append(s, ' ', _options.borderVChar, ' ');
 }
 
@@ -122,8 +154,42 @@ void Table::addRow(const std::vector<std::string>& row)
 		trimRight(c.text);		// right trailing spaces are presumably extraneous
 
 		c.nLines = nLines(c.text, c.desiredWidth);
+		c.color = _options.textColor;
+		c.alignment = _options.alignment;
 	}
 	_rows.push_back(r);
+}
+
+void Table::setCell(int row, int col, std::optional<Color> color, std::optional<Alignment> alignment)
+{
+	Cell& cell = _rows[row][col];
+	if (color) {
+		cell.color = *color;
+	}
+	if (alignment) {
+		cell.alignment = *alignment;
+	}
+}
+
+void Table::setRow(int row, std::optional<Color> color, std::optional<Alignment> alignment)
+{
+	for (int c = 0; c < _rows[row].size(); ++c) {
+		setCell(row, c, color, alignment);
+	}
+}
+
+void Table::setColumn(int col, std::optional<Color> color, std::optional<Alignment> alignment)
+{
+	for (int r = 0; r < _rows.size(); ++r) {
+		setCell(r, col, color, alignment);
+	}
+}
+
+void Table::setTable(std::optional<Color> color, std::optional<Alignment> alignment)
+{
+	for (int r = 0; r < _rows.size(); ++r) {
+		setRow(r, color, alignment);
+	}
 }
 
 std::vector<int> Table::computeWidths(const int w) const
@@ -310,11 +376,11 @@ std::string Table::format() const
 		int line = 0;
 		while (!done) {
 			done = true;
-			if (_options.outerBorder) append(out, _options.borderVChar, ' ');
+			printLeft(out);
 
 			for (size_t c = 0; c < _cols.size(); ++c) {
 				if (c > 0)
-					append(out, ' ', _options.borderVChar, ' ');
+					printCenter(out);
 
 				std::string view;
 				if (line < breaks[c].size()) {
@@ -327,23 +393,41 @@ std::string Table::format() const
 				}
 
 				int width = innerColWidth[c];
-				if (view.size() <= width) {
-					append(out, view, width);
-				}
-				else {
-					const std::string ellipsis = kEllipsis;
-					if (width <= ellipsis.size()) {
-						out += ellipsis.substr(0, width);
+				{
+					Dye dye(_rows[r][c].color, out);
+					Alignment align = _rows[r][c].alignment;
+
+					if (view.size() <= width) {
+						// It's only where the text fits that the alignment matters.
+						if (align == Alignment::left) {
+							out += view;
+							out.append(width - view.size(), ' ');
+						}
+						else if (align == Alignment::right) {
+							out.append(width - view.size(), ' ');
+							out += view;
+						}
+						else if (align == Alignment::center) {
+							int left = int(width - view.size()) / 2;
+							out.append(left, ' ');
+							out += view;
+							out.append(width - left - view.size(), ' ');
+						}
 					}
 					else {
-						out += view.substr(0, width - ellipsis.size());
-						out += ellipsis;
+						const std::string ellipsis = kEllipsis;
+						if (width <= ellipsis.size()) {
+							out += ellipsis.substr(0, width);
+						}
+						else {
+							out += view.substr(0, width - ellipsis.size());
+							out += ellipsis;
+						}
 					}
 				}
 			}
 			++line;
-			if (_options.outerBorder)
-				append(out, ' ', _options.borderVChar);
+			printRight(out);
 			out += '\n';
 		}
 		if (r < _rows.size() - 1)
@@ -365,18 +449,21 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 
 	std::string buf;
 
-	if (_options.outerBorder) {
-		for (size_t c = 0; c < _cols.size(); ++c) {
+	{
+		Dye dye(_options.tableColor, buf);
+		if (_options.outerBorder) {
+			for (size_t c = 0; c < _cols.size(); ++c) {
+				buf += _options.borderCornerChar;
+				buf.append(2 + innerColWidth[c], _options.borderHChar);
+			}
 			buf += _options.borderCornerChar;
-			buf.append(2 + innerColWidth[c], _options.borderHChar);
 		}
-		buf += _options.borderCornerChar;
-	}
-	else {
-		buf.append(1 + innerColWidth[0], _options.borderHChar);
-		for (size_t c = 1; c < _cols.size(); ++c) {
-			buf += _options.borderCornerChar;
-			buf.append(2 + innerColWidth[c], _options.borderHChar);
+		else {
+			buf.append(1 + innerColWidth[0], _options.borderHChar);
+			for (size_t c = 1; c < _cols.size(); ++c) {
+				buf += _options.borderCornerChar;
+				buf.append(2 + innerColWidth[c], _options.borderHChar);
+			}
 		}
 	}
 	s += buf;
