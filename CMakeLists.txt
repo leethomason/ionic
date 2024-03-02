@@ -9,8 +9,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 file(GLOB SOURCES "src/*.cpp" "test/test.cpp")
 file(GLOB HEADERS "include/ionic/*.h")
 
+enable_testing()
+
+add_test(
+  NAME ionic
+  COMMAND ionic
+)
+
 add_executable(ionic ${SOURCES} ${HEADERS})
 target_include_directories(ionic PUBLIC "include")
-
 
 
