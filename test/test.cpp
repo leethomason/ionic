@@ -201,7 +201,6 @@ bool IonicTest::test()
         TEST(breaks[3].start == 22 && breaks[3].end == 30 && breaks[3].next == 31);
         TEST(breaks[4].start == 31 && breaks[4].end == 38 && breaks[4].next == 39);
     }
-#if 0
     {
         // Line breaking used by markdown and similar.
         // Notes:
@@ -209,20 +208,19 @@ bool IonicTest::test()
         // - but it's very common to have a space at the end of a line
         // - a double new line is a paragraph break
         std::string line =
-            "A group of explorers searches \n"
-            "in the Antarctic two hundred years ago. It is a long and perilous\n"
+            "A group searches \n"
+            "in the Antarctic. It is a long and perilous\n"
             "journey.\n"
             " \n"
-            "The ship is found, but the explorers are unprepared for the\n"
-            "strange and terrifying secrets that they uncover.";
+            "They are unprepared for the\n"
+            "strange secrets that they uncover.";
 
         std::string out = ionic::Table::normalizeMD(line);
         std::string expected =
-            "A group of explorers searches in the Antarctic two hundred years ago. It is a long and perilous journey.\n"
-            "The ship is found, but the explorers are unprepared for the strange and terrifying secrets that they uncover.";
+            "A group searches in the Antarctic. It is a long and perilous journey.\n"
+            "They are unprepared for the strange secrets that they uncover.";
         TEST(out == expected);
     }
-#endif
     return true;
 }
 }
@@ -263,7 +261,7 @@ int main(int argc, const char* argv[])
         options.tableColor = ionic::Color::blue;
         ionic::Table t(options);
 
-        t.addRow({ "", "Color", "Color", "Color", "Color", "Color", "Color" });
+        t.addRow({ "", "R", "G", "B", "Y", "M", "C" });
         t.addRow({ "Normal", "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" });
         t.addRow({ "Bright", "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" });
 

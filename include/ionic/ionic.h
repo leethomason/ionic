@@ -100,6 +100,12 @@ public:
     // Query the terminal width.
     static int terminalWidth();
 
+    /*
+    * "Markdown style" input is a bit of a challenge. This converts a string
+    * from "markdown style" to "plain text" by removing the markdown formatting.
+    */
+    static std::string normalizeMD(const std::string& s);
+
 private:
     // Remove CR.
     static void normalizeNL(std::string& s) {

@@ -480,4 +480,46 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 	s += buf;
 	s.push_back('\n');
 }
+
+/*static*/ std::string Table::normalizeMD(const std::string& s)
+{
+	std::string out;
+	out.reserve(s.size());
+
+	// Trim the space before newlines.
+	size_t pos = 0;
+	while (pos < s.size()) {
+		size_t next = s.find('\n', pos);
+		next = std::min(next, s.size());
+
+		std::string line = s.substr(pos, next - pos);
+		trimRight(line);
+		out += line;
+		out.push_back('\n');
+
+		pos = next + 1;
+	}
+	// Now a single newline is a space, and a double newline is a...newline.
+
+	std::string out2;
+	out2.reserve(s.size());
+	for (pos = 0; pos < out.size(); pos++) {
+		if (out[pos] == '\n') {
+			if (pos + 1 < out.size() && out[pos + 1] == '\n') {
+				out2.push_back('\n');
+				pos++;
+			}
+			else {
+				out2.push_back(' ');
+			}
+		}
+		else {
+			out2.push_back(out[pos]);
+		}
+	}
+	trimRight(out2);
+	return out2;
+}
+
+
 }  // namespace ionic

@@ -2,7 +2,6 @@
 
 ## To Do
 
-
 ## Done
 
 * Indicate when cells can't be fully shown
