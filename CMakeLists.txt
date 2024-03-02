@@ -26,6 +26,8 @@ target_include_directories(ionic
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADERS}")
+
 enable_testing()
 
 add_test(
@@ -35,4 +37,12 @@ add_test(
 
 add_executable(ionic_test "test/test.cpp")  
 target_link_libraries(ionic_test ionic)
+
+include(GNUInstallDirs)
+install(TARGETS ionic
+    EXPORT "ionicTargets"
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ionic 
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
 
