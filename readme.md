@@ -12,3 +12,12 @@ runs reasonably efficiently.
 Ionic is similar to Tabulate (https://github.com/p-ranav/tabulate) but it is
 much simpler, both in code and features.
 
+It has no dependencies (beyond C++ 17).
+
+TODO:
+
+* Getting started
+* Examples
+* Installation / using / building
+* dynamic -> flex
+* terminal -> console
