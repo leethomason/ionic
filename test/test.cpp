@@ -14,7 +14,7 @@ void PrintRuler(int w)
 
 void AddVar4Rows(ionic::Table& table)
 {
-    table.setColumnFormat({ {ionic::ColType::fixed, 2}, {ionic::ColType::dynamic}, {ionic::ColType::dynamic} });
+    table.setColumnFormat({ {ionic::ColType::fixed, 2}, {ionic::ColType::flex}, {ionic::ColType::flex} });
     table.addRow({ "0", "A", "The Outer World" });
     table.addRow({ "1", "Hello", "And Another" });
     table.addRow({ "2", "World", "Further Out" });
@@ -240,17 +240,19 @@ int main(int argc, const char* argv[])
     else
         std::cout << "ERROR tests failed.\n";
 
+    std::cout << "Welcome to ionic. (https://github.com/leethomason/ionic)\nA simple table formatter for console output in c++.\n\n";
+
     Print4();
     
-    {
+    if (printAllTests) {
         ionic::TableOptions options;
         options.maxWidth = 50;
         ionic::Table t5(options);
         t5.setColumnFormat({ {ionic::ColType::fixed, 1},
                              {ionic::ColType::fixed, 4},
-                             {ionic::ColType::dynamic},
-                             {ionic::ColType::dynamic},
-                             {ionic::ColType::dynamic} });
+                             {ionic::ColType::flex},
+                             {ionic::ColType::flex},
+                             {ionic::ColType::flex} });
         t5.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
         t5.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
         t5.print();
@@ -288,9 +290,9 @@ int main(int argc, const char* argv[])
         ionic::Table t;
         t.setColumnFormat({ {ionic::ColType::fixed, 10}, {ionic::ColType::fixed, 10}, {ionic::ColType::fixed, 10} });
         t.addRow({ { "This is left aligned text" }, { "This text is center aligned" }, { "And finally this is right aligned" } });
-        t.setColumn(0, {}, { ionic::Alignment::left });
-        t.setColumn(1, {}, { ionic::Alignment::center });
-        t.setColumn(2, {}, { ionic::Alignment::right });
+        t.setColumn(0, {ionic::Color::brightGreen}, { ionic::Alignment::left });
+        t.setColumn(1, {ionic::Color::yellow}, { ionic::Alignment::center });
+        t.setColumn(2, {ionic::Color::brightCyan}, { ionic::Alignment::right });
         t.print();
     }
 
@@ -302,9 +304,9 @@ int main(int argc, const char* argv[])
             ionic::Table t(options);
             t.setColumnFormat({ {ionic::ColType::fixed, 1},
                                  {ionic::ColType::fixed, 4},
-                                 {ionic::ColType::dynamic},
-                                 {ionic::ColType::dynamic},
-                                 {ionic::ColType::dynamic} });
+                                 {ionic::ColType::flex},
+                                 {ionic::ColType::flex},
+                                 {ionic::ColType::flex} });
             t.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
             t.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
             t.print();
@@ -314,9 +316,9 @@ int main(int argc, const char* argv[])
             ionic::Table t6;
             t6.setColumnFormat({ {ionic::ColType::fixed, 1},
                                  {ionic::ColType::fixed, 4},
-                                 {ionic::ColType::dynamic},
-                                 {ionic::ColType::dynamic},
-                                 {ionic::ColType::dynamic} });
+                                 {ionic::ColType::flex},
+                                 {ionic::ColType::flex},
+                                 {ionic::ColType::flex} });
             t6.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
             t6.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
             t6.print();

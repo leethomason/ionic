@@ -36,7 +36,7 @@ enum class Alignment {
 };
 
 enum class ColType {
-    dynamic,       // as wide as needed
+    flex,       // as wide as needed
     fixed, 	    // specified width
 };
 
@@ -46,7 +46,7 @@ struct TableOptions {
     char borderHChar = '-';                     // specify characters for the border
     char borderVChar = '|';                     // specify characters for the border
     char borderCornerChar = '+';                // specify characters for the border
-    int  maxWidth = -1;                         // positive will use that value; <=0 will use terminal width
+    int  maxWidth = -1;                         // positive will use that value; <=0 will use console width
     Color tableColor = Color::default;          // color of the table border and dividers
     Color textColor = Color::default;		    // default color of the text - can be overridden for individual cells
     Alignment alignment = Alignment::left;	    // default alignment of the text - can be overridden for individual cells
@@ -55,7 +55,7 @@ struct TableOptions {
 /*
 *   1. Construct a Table with TableOptions. (See TableOptions for features that can be set.)
 *   2. Optional: Set the column format with setColumnFormat(). You can specify columns to be
-*      fixed width or dynamic width. If you don't setColumFormat(), all columns will be dynamic.
+*      fixed width or flex width. If you don't setColumFormat(), all columns will be flex.
 *   3. Add text rows with addRow(). The number of columns must match the number of columns in the format.
 *   4. Optional: Set the color and alignment of individual cells, rows, columns, or the entire table.
 *      Use setCell(), setRow(), setColumn(), and setTable().
@@ -65,13 +65,13 @@ struct TableOptions {
 class Table {
     friend class IonicTest;
 public:
-    static bool useColor;
+    static bool colorEnabled;
     static void initConsole();
 
     Table(const TableOptions& options = TableOptions()) : _options(options) {}
 
     struct Column {
-        ColType type = ColType::dynamic;
+        ColType type = ColType::flex;
         int requestedWidth = 0;
     };
     void setColumnFormat(const std::vector<Column>& cols);
@@ -94,11 +94,11 @@ public:
     static constexpr char kWhitespace[] = " \t\n\r";
     static constexpr char kSpace[] = " \t";
     static constexpr char kEllipsis[] = "..";
-    static constexpr int kMinWidth = 3;         // minimum column width for dynamic columns
+    static constexpr int kMinWidth = 3;         // minimum column width for flex columns
 
     // Utility functions
     // Query the terminal width.
-    static int terminalWidth();
+    static int consoleWidth();
 
     /*
     * "Markdown style" input is a bit of a challenge. This converts a string
