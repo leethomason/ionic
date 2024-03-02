@@ -20,4 +20,4 @@ TODO:
 * Examples
 * Installation / using / building
 * dynamic -> flex
-
+* terminal -> console
