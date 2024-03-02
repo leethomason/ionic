@@ -13,7 +13,7 @@
 
 namespace ionic {															
 
-bool Table::useColor = true;
+bool Table::colorEnabled = true;
 
 void Table::initConsole()
 {
@@ -26,7 +26,7 @@ void Table::initConsole()
 #endif
 }
 
-int Table::terminalWidth() 
+int Table::consoleWidth() 
 {
 #ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -81,12 +81,12 @@ int Table::terminalWidth()
 
 Table::Dye::Dye(Color c, std::string& s) : _c(c), _s(s)
 {
-	if (_c != Color::default && Table::useColor)
+	if (_c != Color::default && Table::colorEnabled)
 		_s += Dye::colorCode(c);
 }
 
 Table::Dye::~Dye() {
-	if (_c != Color::default && Table::useColor)
+	if (_c != Color::default && Table::colorEnabled)
 		_s += Dye::colorCode(Color::reset);
 }
 
@@ -152,7 +152,7 @@ void Table::addRow(const std::vector<std::string>& row)
 {
 	if (_cols.empty()) {
 		std::vector<Table::Column> cvec;
-		cvec.resize(row.size(), Column{ ColType::dynamic, 0 });
+		cvec.resize(row.size(), Column{ ColType::flex, 0 });
 		setColumnFormat(cvec);
 	}
 	assert(row.size() == _cols.size());
@@ -233,7 +233,7 @@ std::vector<int> Table::computeWidths(const int w) const
 	if (requiredWidth >= w) {
 		// Nothing we can do.
 		for (size_t i = 0; i < _cols.size(); ++i) {
-			if (_cols[i].type == ColType::dynamic) {
+			if (_cols[i].type == ColType::flex) {
 				inner[i] = kMinWidth;
 			}
 		}
@@ -245,7 +245,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	std::vector<int> dynCols;
 	for (size_t i = 0; i < _cols.size(); ++i) {
-		if (_cols[i].type == ColType::dynamic) {
+		if (_cols[i].type == ColType::flex) {
 			if (inner[i] <= grant) {
 				avail -= inner[i];
 			}
@@ -351,7 +351,7 @@ std::string Table::format() const
 		return out;
 	}
 
-	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : terminalWidth();
+	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : consoleWidth();
 	int innerWidth = outerWidth;
 	if (_options.outerBorder)
 		innerWidth -= 2 * 2;	// 2 for each border
