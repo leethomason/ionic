@@ -26,12 +26,23 @@ void Table::initConsole()
 #endif
 }
 
-int Table::terminalWidth() const
+int Table::terminalWidth() 
 {
 #ifdef _WIN32
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+	int w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+
+	// Git bash on Windows doesn't report the correct width.
+	//_dupenv_s(&s, 0, "COLUMNS"); // this doesn't work, because it's not an environment var. (It works on the command line.)
+	// I don't want to write a text file and incur issues there. 
+	// popen() fires up a shell, which is absurd.
+	// Looking for a better way.
+	// For now it's hardcoded.
+	if (w < 4) {
+		w = 80;
+	}
+	return w;
 #else
 #	error "Not implemented"
 #endif // _WIN32
@@ -141,7 +152,7 @@ void Table::addRow(const std::vector<std::string>& row)
 {
 	if (_cols.empty()) {
 		std::vector<Table::Column> cvec;
-		cvec.resize(row.size(), Column{ ColType::kDynamic, 0 });
+		cvec.resize(row.size(), Column{ ColType::dynamic, 0 });
 		setColumnFormat(cvec);
 	}
 	assert(row.size() == _cols.size());
@@ -202,7 +213,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		const Column& c = _cols[i];
-		if (c.type == ColType::kFixed) {
+		if (c.type == ColType::fixed) {
 			inner[i] = c.requestedWidth;
 			requiredWidth += c.requestedWidth;
 			fixedWidth += c.requestedWidth;
@@ -222,7 +233,7 @@ std::vector<int> Table::computeWidths(const int w) const
 	if (requiredWidth >= w) {
 		// Nothing we can do.
 		for (size_t i = 0; i < _cols.size(); ++i) {
-			if (_cols[i].type == ColType::kDynamic) {
+			if (_cols[i].type == ColType::dynamic) {
 				inner[i] = kMinWidth;
 			}
 		}
@@ -234,7 +245,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	std::vector<int> dynCols;
 	for (size_t i = 0; i < _cols.size(); ++i) {
-		if (_cols[i].type == ColType::kDynamic) {
+		if (_cols[i].type == ColType::dynamic) {
 			if (inner[i] <= grant) {
 				avail -= inner[i];
 			}
@@ -444,7 +455,7 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 {
 	if (outer && !_options.outerBorder)
 		return;
-	if (!outer && !_options.innerHorizontalDivider)
+	if (!outer && !_options.innerHDivider)
 		return;
 
 	std::string buf;

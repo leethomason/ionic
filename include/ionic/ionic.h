@@ -36,22 +36,32 @@ enum class Alignment {
 };
 
 enum class ColType {
-    kDynamic,       // as wide as needed
-    kFixed, 	    // specified width
+    dynamic,       // as wide as needed
+    fixed, 	    // specified width
 };
 
 struct TableOptions {
-    bool outerBorder = true;
-    bool innerHorizontalDivider = true;
-    char borderHChar = '-';
-    char borderVChar = '|';
-    char borderCornerChar = '+';
-    int  maxWidth = -1;  // positive will use that value; <=0 will use terminal width
-    Color tableColor = Color::default;
-    Color textColor = Color::default;
-    Alignment alignment = Alignment::left;
+    bool outerBorder = true;                    // true to draw the outer border
+    bool innerHDivider = true;				    // true to draw horizontal dividers between rows
+    char borderHChar = '-';                     // specify characters for the border
+    char borderVChar = '|';                     // specify characters for the border
+    char borderCornerChar = '+';                // specify characters for the border
+    int  maxWidth = -1;                         // positive will use that value; <=0 will use terminal width
+    Color tableColor = Color::default;          // color of the table border and dividers
+    Color textColor = Color::default;		    // default color of the text - can be overridden for individual cells
+    Alignment alignment = Alignment::left;	    // default alignment of the text - can be overridden for individual cells
 };
 
+/*
+*   1. Construct a Table with TableOptions. (See TableOptions for features that can be set.)
+*   2. Optional: Set the column format with setColumnFormat(). You can specify columns to be
+*      fixed width or dynamic width. If you don't setColumFormat(), all columns will be dynamic.
+*   3. Add text rows with addRow(). The number of columns must match the number of columns in the format.
+*   4. Optional: Set the color and alignment of individual cells, rows, columns, or the entire table.
+*      Use setCell(), setRow(), setColumn(), and setTable().
+*   5. Call format() to get the formatted table as a string, or print() to print it to the console,
+*      or use the << operator to print it to an ostream.
+*/
 class Table {
 public:
     static bool useColor;
@@ -60,7 +70,7 @@ public:
     Table(const TableOptions& options = TableOptions()) : _options(options) {}
 
     struct Column {
-        ColType type = ColType::kDynamic;
+        ColType type = ColType::dynamic;
         int requestedWidth = 0;
     };
     void setColumnFormat(const std::vector<Column>& cols);
@@ -109,7 +119,7 @@ public:
 
     static Break lineBreak(const std::string& text, size_t start, size_t end, int width);
 
-    int terminalWidth() const;
+    static int terminalWidth();
 
 private:
 
@@ -136,7 +146,7 @@ private:
     std::vector<Column> _cols;
     std::vector<std::vector<Cell>> _rows;
 
-    std::vector<int> computeWidths(const int w) const;   // returns inner column sizes for the given w (width)
+    std::vector<int> computeWidths(const int width) const;   // returns inner column sizes for the given width
 
     void printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const;
     void printLeft(std::string& s) const;
