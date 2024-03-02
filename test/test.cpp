@@ -94,7 +94,13 @@ void Print4()
 		return false;										    \
 	}
 
-bool test()
+namespace ionic {
+class IonicTest {
+public:
+    static bool test();
+};
+
+bool IonicTest::test()
 {
     using namespace ionic;
     {
@@ -206,17 +212,19 @@ bool test()
             "A group of explorers searches \n"
             "in the Antarctic two hundred years ago. It is a long and perilous\n"
             "journey.\n"
-            "\n"
+            " \n"
             "The ship is found, but the explorers are unprepared for the\n"
             "strange and terrifying secrets that they uncover.";
+
         std::string out = ionic::Table::normalizeMD(line);
         std::string expected =
-			"A group of explorers searches in the Antarctic two hundred years ago. It is a long and perilous journey.\n"
-			"The ship is found, but the explorers are unprepared for the strange and terrifying secrets that they uncover.";
+            "A group of explorers searches in the Antarctic two hundred years ago. It is a long and perilous journey.\n"
+            "The ship is found, but the explorers are unprepared for the strange and terrifying secrets that they uncover.";
         TEST(out == expected);
     }
 #endif
     return true;
+}
 }
 
 int main(int argc, const char* argv[]) 
@@ -228,7 +236,7 @@ int main(int argc, const char* argv[])
     }
 
     ionic::Table::initConsole();
-    bool okay = test();
+    bool okay = ionic::IonicTest::test();
     if (okay)
         std::cout << "All tests passed.\n";
     else

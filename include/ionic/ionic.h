@@ -63,6 +63,7 @@ struct TableOptions {
 *      or use the << operator to print it to an ostream.
 */
 class Table {
+    friend class IonicTest;
 public:
     static bool useColor;
     static void initConsole();
@@ -95,9 +96,11 @@ public:
     static constexpr char kEllipsis[] = "..";
     static constexpr int kMinWidth = 3;         // minimum column width for dynamic columns
 
-    // --- Utility functions --- 
-    // Called automatically. Here as public for convenience.
-    
+    // Utility functions
+    // Query the terminal width.
+    static int terminalWidth();
+
+private:
     // Remove CR.
     static void normalizeNL(std::string& s) {
         s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
@@ -115,13 +118,11 @@ public:
         size_t next = 0;
     };
 
+    // Breaks the text into lines of the given width.
     static std::vector<Break> wordWrap(const std::string& text, int width);
 
+    // Breaks a single line - usually called by wordWrap.
     static Break lineBreak(const std::string& text, size_t start, size_t end, int width);
-
-    static int terminalWidth();
-
-private:
 
     struct Cell {
 		std::string text;
