@@ -16,16 +16,18 @@ file(GLOB HEADERS "include/ionic/*.h")
 
 if (MASTER_PROJECT)
     set(SOURCES ${SOURCES} "test/test.cpp")
+
+  enable_testing()
+
+  add_test(
+    NAME ionic
+    COMMAND ionic
+  )
+  add_executable(ionic ${SOURCES} ${HEADERS})  
+else()
+  add_library(ionic STATIC ${SOURCES} ${HEADERS})
 endif()
 
-enable_testing()
-
-add_test(
-  NAME ionic
-  COMMAND ionic
-)
-
-add_executable(ionic ${SOURCES} ${HEADERS})
 target_include_directories(ionic PUBLIC "include")
 
 
