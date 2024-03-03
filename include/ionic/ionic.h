@@ -51,6 +51,7 @@ struct TableOptions {
     char borderCornerChar = '+';                // specify characters for the border
     
     int  maxWidth = -1;                         // positive will use that value; <=0 will use console width
+    int  indent = 0;                            // number of spaces to indent the table (reduces width)
     
     Color tableColor = Color::kDefault;         // color of the table border and dividers
     Color textColor = Color::kDefault;		    // default color of the text - can be overridden for individual cells

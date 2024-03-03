@@ -372,7 +372,7 @@ std::string Table::format() const
 	int vDivWidth = _options.innerVDivider ? 3 : 2;
 
 	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : consoleWidth();
-	int innerWidth = outerWidth;
+	int innerWidth = outerWidth - _options.indent;
 	if (_options.outerBorder)
 		innerWidth -= 2 * 2;	// 2 for each border
 	innerWidth -= vDivWidth * (int(_cols.size()) - 1);	// 3 for each inner border
@@ -407,6 +407,7 @@ std::string Table::format() const
 		size_t line = 0;
 		while (!done) {
 			done = true;
+			out.append(_options.indent, ' ');
 			printLeft(out);
 
 			for (size_t c = 0; c < _cols.size(); ++c) {
@@ -462,8 +463,9 @@ std::string Table::format() const
 			printRight(out);
 			out += '\n';
 		}
-		if (r + 1 < _rows.size())
+		if (r + 1 < _rows.size()) {
 			printHorizontalBorder(out, innerColWidth, false);
+		}
 	}
 
 	printHorizontalBorder(out, innerColWidth, true);
@@ -482,6 +484,7 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 	std::string buf;
 
 	{
+		buf.append(_options.indent, ' ');
 		Dye dye(_options.tableColor, buf);
 		if (_options.outerBorder) {
 			for (size_t c = 0; c < _cols.size(); ++c) {
