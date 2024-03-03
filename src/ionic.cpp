@@ -53,8 +53,7 @@ int Table::consoleWidth()
 #	error "Apple not yet implemented"
 #elif __linux__
 	struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-	std::cout << "Width: " << w.ws_col << std::endl;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	return w.ws_col;
 #else
 #	error "Not implemented"
