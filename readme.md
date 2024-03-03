@@ -29,7 +29,7 @@ include(FetchContent)
 ...
 FetchContent_Declare(
   ionic
-  GIT_REPOSITORY git@github.com:leethomason/ionic.git
+  GIT_REPOSITORY https://github.com/leethomason/ionic.git
   GIT_TAG        <current git commit hash>
 )
 FetchContent_MakeAvailable(ionic)
