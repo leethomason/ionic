@@ -1,6 +1,6 @@
 # Ionic
 
-Simple tables for console output in C++.
+A C++ libary for outputting tables to the console.
 
 [![Build and Test](https://github.com/leethomason/ionic/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/leethomason/ionic/actions/workflows/test.yml)
 
@@ -66,7 +66,7 @@ Only once, before output. Call:
         ionic::Table::initConsole();
 ```
 
-Windows 10 terminals can be grumpy about output it color, and this enables it
+Windows 10 terminals can be grumpy about output in color, and this enables it
 for the current terminal.
 
 ### Creating Tables

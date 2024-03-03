@@ -96,6 +96,10 @@ public:
         return os;
     }
 
+    // -- Query -- //
+    int nRows() const { return static_cast<int>(_rows.size()); }
+    int nCols() const { return static_cast<int>(_cols.size()); }
+
     // -- Constants --
     static constexpr char kWhitespace[] = " \t\n\r";
     static constexpr char kSpace[] = " \t";
