@@ -275,6 +275,7 @@ std::vector<int> Table::computeWidths(const int w) const
 		return inner;
 	}
 
+	assert(dynCols.size());
 	int grant2 = avail / int(dynCols.size());
 	for (size_t i = 0; i < dynCols.size() - 1; ++i) {
 		if (grant2 >= inner[dynCols[i]]) {
@@ -340,7 +341,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 		// Hit a new line.
 		if (end == start) {
-			lines.push_back(Break{ start, start + 1, start + 1});
+			lines.push_back(Break{ start, start, start + 1});
 			start = end + 1;
 			continue;
 		}
@@ -374,7 +375,7 @@ std::string Table::format() const
 	int innerWidth = outerWidth;
 	if (_options.outerBorder)
 		innerWidth -= 2 * 2;	// 2 for each border
-	innerWidth -= vDivWidth * int(_cols.size() - 1);	// 3 for each inner border
+	innerWidth -= vDivWidth * (int(_cols.size()) - 1);	// 3 for each inner border
 
 	std::vector<int> innerColWidth = computeWidths(innerWidth);
 	
@@ -414,7 +415,7 @@ std::string Table::format() const
 
 				std::string view;
 				if (line < breaks[c].size()) {
-					if (line < breaks[c].size() - 1)
+					if (line + 1 < breaks[c].size())
 						done = false;
 					const std::string& str = _rows[r][c].text;
 					view = str.substr(
@@ -461,7 +462,7 @@ std::string Table::format() const
 			printRight(out);
 			out += '\n';
 		}
-		if (r < _rows.size() - 1)
+		if (r + 1 < _rows.size())
 			printHorizontalBorder(out, innerColWidth, false);
 	}
 
