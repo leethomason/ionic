@@ -497,7 +497,7 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 	s.push_back('\n');
 }
 
-/*static*/ std::string Table::normalizeMD(const std::string& s)
+/*static*/ std::string Table::normalizeMD(const std::string& s, int nNL)
 {
 	std::string out;
 	out.reserve(s.size());
@@ -522,7 +522,13 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 	for (pos = 0; pos < out.size(); pos++) {
 		if (out[pos] == '\n') {
 			if (pos + 1 < out.size() && out[pos + 1] == '\n') {
-				out2.push_back('\n');
+				if (nNL == 1) {
+					out2.push_back('\n');
+				}
+				else {
+					out2.push_back('\n');
+					out2.push_back('\n');
+				}
 				pos++;
 			}
 			else {

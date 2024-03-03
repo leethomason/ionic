@@ -215,11 +215,19 @@ bool IonicTest::test()
             "They are unprepared for the\n"
             "strange secrets that they uncover.";
 
-        std::string out = ionic::Table::normalizeMD(line);
+        std::string out = ionic::Table::normalizeMD(line, 1);
         std::string expected =
             "A group searches in the Antarctic. It is a long and perilous journey.\n"
             "They are unprepared for the strange secrets that they uncover.";
         TEST(out == expected);
+
+        // BUT! Sometime we expect the double new line to be preserved.
+        // Markdown is tricky stuff.
+        std::string out2 = ionic::Table::normalizeMD(line, 2);
+        std::string expected2 =
+            "A group searches in the Antarctic. It is a long and perilous journey.\n\n"
+            "They are unprepared for the strange secrets that they uncover.";
+        TEST(out2 == expected2);
     }
     return true;
 }
