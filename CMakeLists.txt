@@ -9,11 +9,14 @@ if (PROJECT_IS_TOP_LEVEL)
   message("Top level project")
 endif()
 
-file(GLOB SOURCES "src/*.cpp")
-file(GLOB HEADERS "include/ionic/*.h")
+set (SOURCES
+  src/ionic.cpp
+)
+set (HEADERS
+  include/ionic/ionic.h
+)
 
-add_library(ionic STATIC)
-target_sources(ionic PRIVATE ${SOURCES} ${HEADERS})
+add_library(ionic STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(ionic
     PRIVATE
