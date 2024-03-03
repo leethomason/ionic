@@ -11,7 +11,7 @@ in color, line break, align text, and supports several output styles.
 Ionic is simple; it doesn't have a lot of features, but it's easy to use, and
 runs reasonably efficiently.
 
-Ionic is similar to Tabulate (https://github.com/p-ranav/tabulate) but it is
+Ionic is similar to Tabulate (<https://github.com/p-ranav/tabulate>) but it is
 much simpler, both in code and features.
 
 It has no dependencies beyond C++ 17. Ionic does have platform code - it calls
@@ -33,7 +33,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(ionic)
 ```
 
-Regrettably there is a bug in the ionic makefile, so you will also need to add 
+Regrettably there is a bug in the ionic makefile, so you will also need to add
 the souce files to your project. Here's an example:
 
 ```cmake
@@ -48,7 +48,7 @@ You can also just copy the two files (ionic.h and ionic.cpp) into your project.
 ### Versioning
 
 There is no versioning and won't be. On other projects I've found versioning
-and the infrastructure around it was more effort than the code itself. This is 
+and the infrastructure around it was more effort than the code itself. This is
 a very simple code base, will stay simple, and you can get the
 version you want from the git tag.
 
@@ -91,13 +91,13 @@ for the current terminal.
             {ionic::ColType::flex} });
 ```
 
-3. Add text rows with `addRow()`. The number of columns in `addRow()` calls and 
+3. Add text rows with `addRow()`. The number of columns in `addRow()` calls and
    `setColumnFormat()` calls must match.
 
 ```c++
         table.addRow({ "A", "B" });
         table.addRow({ "C", "D" });
-```        
+```
 
 4. Optional: Set the color and alignment of individual cells, rows, columns, or the entire table. Use `setCell()`, `setRow()`, `setColumn()`, and `setTable()`.
 
@@ -151,7 +151,70 @@ your can set the `static`:
 
 To disable color output.
 
+### Whitespace
+
+Hopefully white space is handled "as you would expect." Nevertheless, let's
+take a look.
+
+Consider the canonical string `Hello, World\n` to
+illustrate how ionic handles whitespace.
+
+Note: The trailing newline (and other whitespace) will be discarded.
+
+Output if breaks used:
+
+```text
+Hello,
+World
+````
+
+Now consider: `Hello,\nWorld\n`
+
+The output will always be:
+
+```text
+Hello,
+World
+````
+
+#### Markdown
+
+Markdown is wonderful, and a common input, but it's a little tricky. Consider:
+
+```text
+A group searches in the Antarctic. 
+It is a long and perilous
+journey.
+
+They are unprepared for the
+strange secrets that they uncover.
+```
+
+There are trailing spaces! Single new lines.
+Double new lines! Exciting!
+
+Ionicy provides a "preprocess" function to help with this. You can call `ionic::Table::normalizeMD()` to
+covert MD input to something ionic can handle.
+
+There is a `nNewLine` parameter.
+
+If `nNewLine` is 1:
+
+```text
+A group searches in the Antarctic. It is a long and perilous journey.
+They are unprepared for the strange secrets that they uncover.
+```
+
+If `nNewLine` is 2:
+
+```text
+A group searches in the Antarctic. It is a long and perilous journey.
+
+They are unprepared for the strange secrets that they uncover.
+```
+
+After which the usual whitespace rules (above) apply.
+
 ## Thanks
 
 Enjoy! I hope you find it useful.
-

@@ -104,8 +104,11 @@ public:
     /*
     * "Markdown style" input is a bit of a challenge. This converts a string
     * from "markdown style" to "plain text" by removing the markdown formatting.
+    * The challenge is two newlines in a row. Should that be a simple paragraph
+    * break, or a new paragraph with a blank line between? Param `nNewLine` specifies
+    * the desired behavior and can be 1 or 2.
     */
-    static std::string normalizeMD(const std::string& s);
+    static std::string normalizeMD(const std::string& s, int nNewLine);
 
 private:
     // Remove CR.
