@@ -5,10 +5,16 @@
 #include <numeric>
 #include <iostream>
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <shlobj_core.h>
+#if defined(_WIN32)
+#	define WIN32_LEAN_AND_MEAN
+#	include <Windows.h>
+#	include <shlobj_core.h>
+#elif __linux__
+#	include <sys/ioctl.h>
+#	include <stdio.h>
+#	include <unistd.h>
+#else
+#	error "undefined"
 #endif
 
 namespace ionic {															
@@ -28,7 +34,7 @@ void Table::initConsole()
 
 int Table::consoleWidth() 
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
 	int w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
@@ -43,6 +49,13 @@ int Table::consoleWidth()
 		w = 80;
 	}
 	return w;
+#elif  __APPLE__
+#	error "Apple not yet implemented"
+#elif __linux__
+	struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+	std::cout << "Width: " << w.ws_col << std::endl;
+	return w.ws_col;
 #else
 #	error "Not implemented"
 #endif // _WIN32
@@ -73,7 +86,7 @@ int Table::consoleWidth()
 	case Color::brightMagenta: return "\x1B[95m";
 	case Color::brightCyan: return "\x1B[96m";
 
-	case Color::default: return "\033[0m";
+	case Color::kDefault: return "\033[0m";
 	case Color::reset: return "\033[0m";
 	}
 	return "";
@@ -81,12 +94,12 @@ int Table::consoleWidth()
 
 Table::Dye::Dye(Color c, std::string& s) : _c(c), _s(s)
 {
-	if (_c != Color::default && Table::colorEnabled)
+	if (_c != Color::kDefault && Table::colorEnabled)
 		_s += Dye::colorCode(c);
 }
 
 Table::Dye::~Dye() {
-	if (_c != Color::default && Table::colorEnabled)
+	if (_c != Color::kDefault && Table::colorEnabled)
 		_s += Dye::colorCode(Color::reset);
 }
 

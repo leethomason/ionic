@@ -37,3 +37,5 @@ add_test(
 
 add_executable(ionic_test "test/test.cpp")  
 target_link_libraries(ionic_test ionic)
+
+# add_executable(ionic_test "test/test.cpp" "src/ionic.cpp")
