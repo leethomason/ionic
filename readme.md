@@ -1,10 +1,10 @@
 # Ionic
 
-Simple tables for console output for C++.
+Simple tables for console output in C++.
 
 ![Ionic Example](example.png)
 
-Currently Windows, but Linux and OSX coming soon.
+Currently Windows and Linux. OSX coming soon.
 
 Ionic is a simple library for outputting tables to the console. It can print
 in color, line break, align text, and supports several output styles.

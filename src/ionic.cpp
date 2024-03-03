@@ -5,10 +5,16 @@
 #include <numeric>
 #include <iostream>
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <shlobj_core.h>
+#if defined(_WIN32)
+#	define WIN32_LEAN_AND_MEAN
+#	include <Windows.h>
+#	include <shlobj_core.h>
+#elif __linux__
+#	include <sys/ioctl.h>
+#	include <stdio.h>
+#	include <unistd.h>
+#else
+#	error "undefined"
 #endif
 
 namespace ionic {															
@@ -28,7 +34,7 @@ void Table::initConsole()
 
 int Table::consoleWidth() 
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
 	int w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
@@ -43,6 +49,13 @@ int Table::consoleWidth()
 		w = 80;
 	}
 	return w;
+#elif  __APPLE__
+#	error "Apple not yet implemented"
+#elif __linux__
+	struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+	std::cout << "Width: " << w.ws_col << std::endl;
+	return w.ws_col;
 #else
 #	error "Not implemented"
 #endif // _WIN32
@@ -73,7 +86,7 @@ int Table::consoleWidth()
 	case Color::brightMagenta: return "\x1B[95m";
 	case Color::brightCyan: return "\x1B[96m";
 
-	case Color::default: return "\033[0m";
+	case Color::kDefault: return "\033[0m";
 	case Color::reset: return "\033[0m";
 	}
 	return "";
@@ -81,12 +94,12 @@ int Table::consoleWidth()
 
 Table::Dye::Dye(Color c, std::string& s) : _c(c), _s(s)
 {
-	if (_c != Color::default && Table::colorEnabled)
+	if (_c != Color::kDefault && Table::colorEnabled)
 		_s += Dye::colorCode(c);
 }
 
 Table::Dye::~Dye() {
-	if (_c != Color::default && Table::colorEnabled)
+	if (_c != Color::kDefault && Table::colorEnabled)
 		_s += Dye::colorCode(Color::reset);
 }
 
@@ -184,22 +197,22 @@ void Table::setCell(int row, int col, std::optional<Color> color, std::optional<
 
 void Table::setRow(int row, std::optional<Color> color, std::optional<Alignment> alignment)
 {
-	for (int c = 0; c < _rows[row].size(); ++c) {
-		setCell(row, c, color, alignment);
+	for (size_t c = 0; c < _rows[row].size(); ++c) {
+		setCell(row, int(c), color, alignment);
 	}
 }
 
 void Table::setColumn(int col, std::optional<Color> color, std::optional<Alignment> alignment)
 {
-	for (int r = 0; r < _rows.size(); ++r) {
-		setCell(r, col, color, alignment);
+	for (size_t r = 0; r < _rows.size(); ++r) {
+		setCell(int(r), col, color, alignment);
 	}
 }
 
 void Table::setTable(std::optional<Color> color, std::optional<Alignment> alignment)
 {
-	for (int r = 0; r < _rows.size(); ++r) {
-		setRow(r, color, alignment);
+	for (size_t r = 0; r < _rows.size(); ++r) {
+		setRow(int(r), color, alignment);
 	}
 }
 
@@ -276,11 +289,13 @@ std::vector<int> Table::computeWidths(const int w) const
 	return inner;
 }
 
-/*static*/ Table::Break Table::lineBreak(const std::string& text, size_t start, size_t end, int width)
+/*static*/ Table::Break Table::lineBreak(const std::string& text, size_t start, size_t end, int p_width)
 {
 	// Don't think about newlines - they are handled by the caller.
 	// (But do check we were called correctly.)
 	assert(text.size() == end || text[end] == '\n');
+	assert(p_width > 0);
+	const size_t width = (size_t)p_width;
 
 	size_t pos = start;
 	size_t nextSpace = start;
@@ -384,7 +399,7 @@ std::string Table::format() const
 		}
 
 		bool done = false;
-		int line = 0;
+		size_t line = 0;
 		while (!done) {
 			done = true;
 			printLeft(out);
@@ -403,7 +418,8 @@ std::string Table::format() const
 						breaks[c][line].end - breaks[c][line].start);
 				}
 
-				int width = innerColWidth[c];
+				assert(innerColWidth[c] >= 0);
+				size_t width = innerColWidth[c];
 				{
 					Dye dye(_rows[r][c].color, out);
 					Alignment align = _rows[r][c].alignment;

@@ -3,17 +3,25 @@ project(ionic)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+
+if(MSVC)
+  add_compile_options(/W4)
+else()
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   message("Top level project")
 endif()
 
-file(GLOB SOURCES "src/*.cpp")
-file(GLOB HEADERS "include/ionic/*.h")
+set (SOURCES
+  src/ionic.cpp
+)
+set (HEADERS
+  include/ionic/ionic.h
+)
 
-add_library(ionic STATIC)
-target_sources(ionic PRIVATE ${SOURCES} ${HEADERS})
+add_library(ionic STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(ionic
     PRIVATE
@@ -37,3 +45,5 @@ add_test(
 
 add_executable(ionic_test "test/test.cpp")  
 target_link_libraries(ionic_test ionic)
+
+# add_executable(ionic_test "test/test.cpp" "src/ionic.cpp")

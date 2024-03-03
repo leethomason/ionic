@@ -5,6 +5,7 @@
 #include <vector>
 #include <ostream>
 #include <optional>
+#include <algorithm>
 
 namespace ionic {
 
@@ -25,7 +26,7 @@ enum class Color : uint8_t {
     brightMagenta,
     brightCyan,
 
-    default,
+    kDefault,
     reset,
 };
 
@@ -47,8 +48,8 @@ struct TableOptions {
     char borderVChar = '|';                     // specify characters for the border
     char borderCornerChar = '+';                // specify characters for the border
     int  maxWidth = -1;                         // positive will use that value; <=0 will use console width
-    Color tableColor = Color::default;          // color of the table border and dividers
-    Color textColor = Color::default;		    // default color of the text - can be overridden for individual cells
+    Color tableColor = Color::kDefault;         // color of the table border and dividers
+    Color textColor = Color::kDefault;		    // default color of the text - can be overridden for individual cells
     Alignment alignment = Alignment::left;	    // default alignment of the text - can be overridden for individual cells
 };
 
@@ -134,7 +135,7 @@ private:
 		std::string text;
         int desiredWidth = 0;
         int nLines = 0;
-        Color color = Color::default;
+        Color color = Color::kDefault;
         Alignment alignment = Alignment::left;
 	};
 
@@ -145,8 +146,8 @@ private:
         static const char* colorCode(Color c);
 
       private:
-		std::string& _s;
         Color _c;
+		std::string& _s;
     };
 
     TableOptions _options;
