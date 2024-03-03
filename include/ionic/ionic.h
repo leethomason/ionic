@@ -146,8 +146,8 @@ private:
         static const char* colorCode(Color c);
 
       private:
-		std::string& _s;
         Color _c;
+		std::string& _s;
     };
 
     TableOptions _options;

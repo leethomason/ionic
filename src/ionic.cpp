@@ -197,21 +197,21 @@ void Table::setCell(int row, int col, std::optional<Color> color, std::optional<
 
 void Table::setRow(int row, std::optional<Color> color, std::optional<Alignment> alignment)
 {
-	for (int c = 0; c < _rows[row].size(); ++c) {
+	for (size_t c = 0; c < _rows[row].size(); ++c) {
 		setCell(row, c, color, alignment);
 	}
 }
 
 void Table::setColumn(int col, std::optional<Color> color, std::optional<Alignment> alignment)
 {
-	for (int r = 0; r < _rows.size(); ++r) {
+	for (size_t r = 0; r < _rows.size(); ++r) {
 		setCell(r, col, color, alignment);
 	}
 }
 
 void Table::setTable(std::optional<Color> color, std::optional<Alignment> alignment)
 {
-	for (int r = 0; r < _rows.size(); ++r) {
+	for (size_t r = 0; r < _rows.size(); ++r) {
 		setRow(r, color, alignment);
 	}
 }
@@ -289,11 +289,13 @@ std::vector<int> Table::computeWidths(const int w) const
 	return inner;
 }
 
-/*static*/ Table::Break Table::lineBreak(const std::string& text, size_t start, size_t end, int width)
+/*static*/ Table::Break Table::lineBreak(const std::string& text, size_t start, size_t end, int p_width)
 {
 	// Don't think about newlines - they are handled by the caller.
 	// (But do check we were called correctly.)
 	assert(text.size() == end || text[end] == '\n');
+	assert(p_width > 0);
+	const size_t width = (size_t)p_width;
 
 	size_t pos = start;
 	size_t nextSpace = start;
@@ -397,7 +399,7 @@ std::string Table::format() const
 		}
 
 		bool done = false;
-		int line = 0;
+		size_t line = 0;
 		while (!done) {
 			done = true;
 			printLeft(out);
@@ -416,7 +418,8 @@ std::string Table::format() const
 						breaks[c][line].end - breaks[c][line].start);
 				}
 
-				int width = innerColWidth[c];
+				assert(innerColWidth[c] >= 0);
+				size_t width = innerColWidth[c];
 				{
 					Dye dye(_rows[r][c].color, out);
 					Alignment align = _rows[r][c].alignment;
