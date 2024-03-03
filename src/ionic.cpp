@@ -198,21 +198,21 @@ void Table::setCell(int row, int col, std::optional<Color> color, std::optional<
 void Table::setRow(int row, std::optional<Color> color, std::optional<Alignment> alignment)
 {
 	for (size_t c = 0; c < _rows[row].size(); ++c) {
-		setCell(row, c, color, alignment);
+		setCell(row, int(c), color, alignment);
 	}
 }
 
 void Table::setColumn(int col, std::optional<Color> color, std::optional<Alignment> alignment)
 {
 	for (size_t r = 0; r < _rows.size(); ++r) {
-		setCell(r, col, color, alignment);
+		setCell(int(r), col, color, alignment);
 	}
 }
 
 void Table::setTable(std::optional<Color> color, std::optional<Alignment> alignment)
 {
 	for (size_t r = 0; r < _rows.size(); ++r) {
-		setRow(r, color, alignment);
+		setRow(int(r), color, alignment);
 	}
 }
 
