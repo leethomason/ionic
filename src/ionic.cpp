@@ -135,7 +135,10 @@ void Table::printRight(std::string& s) const
 void Table::printCenter(std::string& s) const
 {
 	Dye dye(_options.tableColor, s);
-	append(s, ' ', _options.borderVChar, ' ');
+	if (_options.innerVDivider)
+		append(s, ' ', _options.borderVChar, ' ');
+	else
+		append(s, ' ', ' ');
 }
 
 void Table::setColumnFormat(const std::vector<Table::Column>& cols)
@@ -366,11 +369,13 @@ std::string Table::format() const
 		return out;
 	}
 
+	int vDivWidth = _options.innerVDivider ? 3 : 2;
+
 	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : consoleWidth();
 	int innerWidth = outerWidth;
 	if (_options.outerBorder)
 		innerWidth -= 2 * 2;	// 2 for each border
-	innerWidth -= 3 * int(_cols.size() - 1);	// 3 for each inner border
+	innerWidth -= vDivWidth * int(_cols.size() - 1);	// 3 for each inner border
 
 	std::vector<int> innerColWidth = computeWidths(innerWidth);
 	
@@ -480,7 +485,8 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 		Dye dye(_options.tableColor, buf);
 		if (_options.outerBorder) {
 			for (size_t c = 0; c < _cols.size(); ++c) {
-				buf += _options.borderCornerChar;
+				if (c == 0 || _options.innerVDivider)
+					buf += _options.borderCornerChar;
 				buf.append(2 + innerColWidth[c], _options.borderHChar);
 			}
 			buf += _options.borderCornerChar;

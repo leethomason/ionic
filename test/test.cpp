@@ -17,7 +17,7 @@ void AddVar4Rows(ionic::Table& table)
     table.setColumnFormat({ {ionic::ColType::fixed, 2}, {ionic::ColType::flex}, {ionic::ColType::flex} });
     table.addRow({ "0", "A", "The Outer World" });
     table.addRow({ "1", "Hello", "And Another" });
-    table.addRow({ "2", "World", "Further Out" });
+    table.addRow({ "2", "World", "Farther Out" });
 }
 
 void PrintDiffs(const ionic::TableOptions& options)
@@ -27,6 +27,8 @@ void PrintDiffs(const ionic::TableOptions& options)
 		std::cout << "outerBorder: " << options.outerBorder << std::endl;
     if (options.innerHDivider != def.innerHDivider)
         std::cout << "innerHDivider: " << options.innerHDivider << std::endl;
+    if (options.innerVDivider != def.innerVDivider)
+        std::cout << "innerVDivider: " << options.innerVDivider << std::endl;
     if (options.borderHChar != def.borderHChar)
         std::cout << "borderHChar: " << options.borderHChar << std::endl;
     if (options.borderVChar != def.borderVChar)
@@ -43,7 +45,7 @@ void PrintDiffs(const ionic::TableOptions& options)
         std::cout << "alignment: " << static_cast<int>(options.alignment) << std::endl;
 }
 
-void Print4()
+void Print6()
 {
 
     {
@@ -78,6 +80,30 @@ void Print4()
         ionic::TableOptions options;
         options.outerBorder = false;
         options.innerHDivider = false;
+        PrintDiffs(options);
+
+        ionic::Table table(options);
+        AddVar4Rows(table);
+        table.print();
+        std::cout << std::endl;
+    }
+    {
+        ionic::TableOptions options;
+        options.outerBorder = true;
+        options.innerHDivider = false;
+        options.innerVDivider = false;
+        PrintDiffs(options);
+
+        ionic::Table table(options);
+        AddVar4Rows(table);
+        table.print();
+        std::cout << std::endl;
+    }
+    {
+        ionic::TableOptions options;
+        options.outerBorder = false;
+        options.innerHDivider = false;
+        options.innerVDivider = false;
         PrintDiffs(options);
 
         ionic::Table table(options);
@@ -250,7 +276,7 @@ int main(int argc, const char* argv[])
 
     std::cout << "Welcome to ionic. (https://github.com/leethomason/ionic)\nA simple table formatter for console output in c++.\n\n";
 
-    Print4();
+    Print6();
     
     if (printAllTests) {
         ionic::TableOptions options;

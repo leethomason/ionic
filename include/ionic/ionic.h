@@ -44,10 +44,14 @@ enum class ColType {
 struct TableOptions {
     bool outerBorder = true;                    // true to draw the outer border
     bool innerHDivider = true;				    // true to draw horizontal dividers between rows
+    bool innerVDivider = true;				    // true to draw vertical dividers between columns
+
     char borderHChar = '-';                     // specify characters for the border
     char borderVChar = '|';                     // specify characters for the border
     char borderCornerChar = '+';                // specify characters for the border
+    
     int  maxWidth = -1;                         // positive will use that value; <=0 will use console width
+    
     Color tableColor = Color::kDefault;         // color of the table border and dividers
     Color textColor = Color::kDefault;		    // default color of the text - can be overridden for individual cells
     Alignment alignment = Alignment::left;	    // default alignment of the text - can be overridden for individual cells
