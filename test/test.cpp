@@ -217,12 +217,12 @@ bool IonicTest::test()
         TEST(breaks[5].start == 64 && breaks[5].end == 73 && breaks[5].next == 73);
     }
     {
-        //                   0    5 _ _  10   15   20_   25   30   35 _  40   45   50   55   60   65   70   75   80   85   90   95   100
+        //                  0    5 _ _  10   15   20_   25   30   35 _  40   45   50   55   60   65   70   75   80   85   90   95   100
         std::string line = "A Poem.\n\nTo challenge\nthe line breaker\n";
         std::vector<Table::Break> breaks = Table::wordWrap(line, 15);
         TEST(breaks.size() == 5);
         TEST(breaks[0].start == 0 && breaks[0].end == 7 && breaks[0].next == 8);
-        TEST(breaks[1].start == 8 && breaks[1].end == 9 && breaks[1].next == 9);
+        TEST(breaks[1].start == 8 && breaks[1].end == 8 && breaks[1].next == 9);
         TEST(breaks[2].start == 9 && breaks[2].end == 21 && breaks[2].next == 22);
         TEST(breaks[3].start == 22 && breaks[3].end == 30 && breaks[3].next == 31);
         TEST(breaks[4].start == 31 && breaks[4].end == 38 && breaks[4].next == 39);
@@ -254,6 +254,57 @@ bool IonicTest::test()
             "A group searches in the Antarctic. It is a long and perilous journey.\n\n"
             "They are unprepared for the strange secrets that they uncover.";
         TEST(out2 == expected2);
+    }
+    {
+        // Bug fix
+        std::string s =
+            "AAA\n"
+            "\n"
+            "BBB\n"
+            "\n"
+            "CCC\n\n";
+
+        std::string out1 = ionic::Table::normalizeMD(s, 1);
+        TEST(out1 == "AAA\nBBB\nCCC");
+
+        std::string out2 = ionic::Table::normalizeMD(s, 2);
+        TEST(out2 == "AAA\n\nBBB\n\nCCC");
+
+        std::vector<Table::Break> breaks1 = Table::wordWrap(out1, 100);
+        TEST(breaks1.size() == 3);
+        TEST(breaks1[0].start == 0 && breaks1[0].end == 3 && breaks1[0].next == 4);
+        TEST(breaks1[1].start == 4 && breaks1[1].end == 7 && breaks1[1].next == 8);
+        TEST(breaks1[2].start == 8 && breaks1[2].end == 11 && breaks1[2].next == 11);
+
+        std::vector<Table::Break> breaks2 = Table::wordWrap(out2, 100);
+        TEST(breaks2.size() == 5);
+        TEST(breaks2[0].start == 0 && breaks2[0].end == 3 && breaks2[0].next == 4);
+        TEST(breaks2[1].start == 4 && breaks2[1].end == 4 && breaks2[1].next == 5);
+        TEST(breaks2[2].start == 5 && breaks2[2].end == 8 && breaks2[2].next == 9);
+        TEST(breaks2[3].start == 9 && breaks2[3].end == 9 && breaks2[3].next == 10);
+        TEST(breaks2[4].start == 10 && breaks2[4].end == 13 && breaks2[4].next == 13);
+
+        ionic::Table t1;
+        t1.addRow({ out1 });
+        std::string f1 = t1.format();
+        TEST(f1 == 
+            "+-----+\n"
+            "| AAA |\n"
+			"| BBB |\n"
+            "| CCC |\n"
+			"+-----+\n");
+
+        ionic::Table t2;
+		t2.addRow({ out2 });
+		std::string f2 = t2.format();
+        TEST(f2 ==
+            "+-----+\n"
+            "| AAA |\n"
+            "|     |\n"
+            "| BBB |\n"
+            "|     |\n"
+            "| CCC |\n"
+            "+-----+\n");
     }
     return true;
 }
