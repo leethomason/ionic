@@ -419,7 +419,9 @@ int main(int argc, const char* argv[])
             t.print();
         }
         {
-            ionic::Table t;
+            ionic::TableOptions options;
+            options.indent = 4;
+            ionic::Table t(options);
             t.setColumnFormat({ {ionic::ColType::fixed, 15} });
             t.addRow({ "123456789012345" });
             t.addRow({ "It was a bright cold day in April, and the clocks were striking thirteen." });
