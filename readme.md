@@ -2,6 +2,8 @@
 
 Simple tables for console output in C++.
 
+[![Build and Test](https://github.com/leethomason/ionic/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/leethomason/ionic/actions/workflows/test.yml)
+
 ![Ionic Example](example.png)
 
 Currently Windows and Linux. OSX coming soon.
