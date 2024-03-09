@@ -13,6 +13,10 @@
 #	include <sys/ioctl.h>
 #	include <stdio.h>
 #	include <unistd.h>
+#elif __APPLE__
+#    include <sys/ioctl.h>
+#    include <stdio.h>
+#    include <unistd.h>
 #else
 #	error "undefined"
 #endif
@@ -50,7 +54,9 @@ int Table::consoleWidth()
 	}
 	return w;
 #elif  __APPLE__
-#	error "Apple not yet implemented"
+    struct winsize w;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    return w.ws_col;
 #elif __linux__
 	struct winsize w;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
