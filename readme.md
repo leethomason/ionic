@@ -14,7 +14,8 @@ Ionic is simple; it doesn't have a lot of features, but it's easy to use, and
 runs reasonably efficiently.
 
 Ionic is similar to Tabulate (<https://github.com/p-ranav/tabulate>) but it is
-much simpler, both in code and features.
+much simpler, both in code and features. Ionic has built in support for
+terminal width, which is a convenience Tabulate does not have.
 
 It has no dependencies beyond C++ 17. Ionic does have platform code - it calls
 windows / linux / osx functions to initialize the console and query size.
@@ -162,6 +163,12 @@ Consider the canonical string `Hello, World\n` to
 illustrate how ionic handles whitespace.
 
 Note: The trailing newline (and other whitespace) will be discarded.
+
+Output without breaks:
+
+```text
+Hello, World
+````
 
 Output if breaks used:
 
