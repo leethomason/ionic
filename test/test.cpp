@@ -306,6 +306,19 @@ bool IonicTest::test()
             "| CCC |\n"
             "+-----+\n");
     }
+    {
+        // I saw a bug with 2 column tables, but could never reproduce it.
+        // Adding a test just in case.
+        ionic::TableOptions options;
+        options.outerBorder = false;
+        options.innerHDivider = false;
+
+        ionic::Table t(options);
+        t.addRow({ "AA", "Hello" });
+        t.addRow({ "BB", "World" });
+        std::string result = t.format();
+        TEST(result == "AA | Hello\nBB | World\n");
+    }
     return true;
 }
 }
