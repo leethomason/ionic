@@ -558,5 +558,14 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 	return out2;
 }
 
+/*static*/ std::string Table::colorize(Color c, const std::string& s)
+{
+	std::string in = Dye::colorCode(c);
+	std::string out = Dye::colorCode(Color::reset);
+
+	return in + s + out;
+}
+
+
 
 }  // namespace ionic

@@ -119,6 +119,8 @@ public:
     */
     static std::string normalizeMD(const std::string& s, int nNewLine);
 
+    static std::string colorize(Color c, const std::string& s);
+
 private:
     // Remove CR.
     static void normalizeNL(std::string& s) {

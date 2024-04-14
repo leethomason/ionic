@@ -319,6 +319,10 @@ bool IonicTest::test()
         std::string result = t.format();
         TEST(result == "AA | Hello\nBB | World\n");
     }
+    {
+        std::string t = ionic::Table::colorize(ionic::Color::red, "Hello");
+        TEST(t == "\033[31mHello\033[0m");
+    }
     return true;
 }
 }
