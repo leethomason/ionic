@@ -119,6 +119,8 @@ public:
     */
     static std::string normalizeMD(const std::string& s, int nNewLine);
 
+    // Returns a string wrapped with the given color. The color is reset at the end.
+    // This does check the colorEnabled flag.
     static std::string colorize(Color c, const std::string& s);
 
 private:
