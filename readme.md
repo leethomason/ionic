@@ -1,6 +1,6 @@
 # Ionic
 
-A C++ libary for outputting tables to the console.
+A C++ library for outputting tables to the console.
 
 [![Build and Test](https://github.com/leethomason/ionic/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/leethomason/ionic/actions/workflows/test.yml)
 
@@ -37,7 +37,7 @@ FetchContent_MakeAvailable(ionic)
 ```
 
 Regrettably there is a bug in the ionic makefile, so you will also need to add
-the souce files to your project. Here's an example:
+the source files to your project. Here's an example:
 
 ```cmake
 add_executable(MyExample simple_example.cpp ${ionic_SOURCE_DIR}/ionic.cpp)
@@ -144,7 +144,7 @@ More examples in the "tests.cpp" file.
 
 Colors aren't stable between OSs, so ionic does a "best effort" to set colors.
 
-Ionic uses the approach of inserting color commands into the generater string.
+Ionic uses the approach of inserting color commands into the generated string.
 This has some advantages and some disadvantages. If color isn't in your environment,
 your can set the `static`:
 
@@ -202,7 +202,7 @@ strange secrets that they uncover.
 There are trailing spaces! Single new lines.
 Double new lines! Exciting!
 
-Ionicy provides a "preprocess" function to help with this. You can call `ionic::Table::normalizeMD()` to
+Ionic provides a "preprocess" function to help with this. You can call `ionic::Table::normalizeMD()` to
 covert MD input to something ionic can handle.
 
 There is a `nNewLine` parameter.
