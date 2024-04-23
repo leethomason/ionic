@@ -130,6 +130,8 @@ private:
     }
     // Remove trailing spaces.
     static void trimRight(std::string& s) {
+        // The npos behavior is weird. If the string is all whitespace, it returns npos. npos+1 is 0,
+        // which then returns nothing (which is correct.)
 		s.erase(s.find_last_not_of(kWhitespace) + 1);
 	}
     // Find the number of lines, and the maximum width of the lines.

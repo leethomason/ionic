@@ -130,6 +130,22 @@ bool IonicTest::test()
 {
     using namespace ionic;
     {
+        std::string t = "Test";
+        ionic::Table::trimRight(t);
+        TEST(t == "Test");
+    }
+    {
+        std::string t = "  ";
+        ionic::Table::trimRight(t);
+        TEST(t.empty());
+    }
+    {
+        std::string t = " aa  ";
+        ionic::Table::trimRight(t);
+        TEST(t == " aa");
+    }
+
+    {
         std::string t = "This\r\nis multi-line\n\rstring\n\r  \n";
         Table::normalizeNL(t);
         TEST(t.find('\r') == std::string::npos);
