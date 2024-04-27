@@ -110,15 +110,6 @@ public:
     // Query the terminal width.
     static int consoleWidth();
 
-    /*
-    * "Markdown style" input is a bit of a challenge. This converts a string
-    * from "markdown style" to "plain text" by removing the markdown formatting.
-    * The challenge is two newlines in a row. Should that be a simple paragraph
-    * break, or a new paragraph with a blank line between? Param `nNewLine` specifies
-    * the desired behavior and can be 1 or 2.
-    */
-    static std::string normalizeMD(const std::string& s, int nNewLine);
-
     // Returns a string wrapped with the given color. The color is reset at the end.
     // This does check the colorEnabled flag.
     static std::string colorize(Color c, const std::string& s);
@@ -130,6 +121,8 @@ private:
     }
     // Remove trailing spaces.
     static void trimRight(std::string& s) {
+        // The npos behavior is weird. If the string is all whitespace, it returns npos. npos+1 is 0,
+        // which then returns nothing (which is correct.)
 		s.erase(s.find_last_not_of(kWhitespace) + 1);
 	}
     // Find the number of lines, and the maximum width of the lines.

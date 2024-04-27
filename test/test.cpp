@@ -130,6 +130,22 @@ bool IonicTest::test()
 {
     using namespace ionic;
     {
+        std::string t = "Test";
+        ionic::Table::trimRight(t);
+        TEST(t == "Test");
+    }
+    {
+        std::string t = "  ";
+        ionic::Table::trimRight(t);
+        TEST(t.empty());
+    }
+    {
+        std::string t = " aa  ";
+        ionic::Table::trimRight(t);
+        TEST(t == " aa");
+    }
+
+    {
         std::string t = "This\r\nis multi-line\n\rstring\n\r  \n";
         Table::normalizeNL(t);
         TEST(t.find('\r') == std::string::npos);
@@ -226,85 +242,6 @@ bool IonicTest::test()
         TEST(breaks[2].start == 9 && breaks[2].end == 21 && breaks[2].next == 22);
         TEST(breaks[3].start == 22 && breaks[3].end == 30 && breaks[3].next == 31);
         TEST(breaks[4].start == 31 && breaks[4].end == 38 && breaks[4].next == 39);
-    }
-    {
-        // Line breaking used by markdown and similar.
-        // Notes:
-        // - a new line is a space
-        // - but it's very common to have a space at the end of a line
-        // - a double new line is a paragraph break
-        std::string line =
-            "A group searches \n"
-            "in the Antarctic. It is a long and perilous\n"
-            "journey.\n"
-            " \n"
-            "They are unprepared for the\n"
-            "strange secrets that they uncover.";
-
-        std::string out = ionic::Table::normalizeMD(line, 1);
-        std::string expected =
-            "A group searches in the Antarctic. It is a long and perilous journey.\n"
-            "They are unprepared for the strange secrets that they uncover.";
-        TEST(out == expected);
-
-        // BUT! Sometime we expect the double new line to be preserved.
-        // Markdown is tricky stuff.
-        std::string out2 = ionic::Table::normalizeMD(line, 2);
-        std::string expected2 =
-            "A group searches in the Antarctic. It is a long and perilous journey.\n\n"
-            "They are unprepared for the strange secrets that they uncover.";
-        TEST(out2 == expected2);
-    }
-    {
-        // Bug fix
-        std::string s =
-            "AAA\n"
-            "\n"
-            "BBB\n"
-            "\n"
-            "CCC\n\n";
-
-        std::string out1 = ionic::Table::normalizeMD(s, 1);
-        TEST(out1 == "AAA\nBBB\nCCC");
-
-        std::string out2 = ionic::Table::normalizeMD(s, 2);
-        TEST(out2 == "AAA\n\nBBB\n\nCCC");
-
-        std::vector<Table::Break> breaks1 = Table::wordWrap(out1, 100);
-        TEST(breaks1.size() == 3);
-        TEST(breaks1[0].start == 0 && breaks1[0].end == 3 && breaks1[0].next == 4);
-        TEST(breaks1[1].start == 4 && breaks1[1].end == 7 && breaks1[1].next == 8);
-        TEST(breaks1[2].start == 8 && breaks1[2].end == 11 && breaks1[2].next == 11);
-
-        std::vector<Table::Break> breaks2 = Table::wordWrap(out2, 100);
-        TEST(breaks2.size() == 5);
-        TEST(breaks2[0].start == 0 && breaks2[0].end == 3 && breaks2[0].next == 4);
-        TEST(breaks2[1].start == 4 && breaks2[1].end == 4 && breaks2[1].next == 5);
-        TEST(breaks2[2].start == 5 && breaks2[2].end == 8 && breaks2[2].next == 9);
-        TEST(breaks2[3].start == 9 && breaks2[3].end == 9 && breaks2[3].next == 10);
-        TEST(breaks2[4].start == 10 && breaks2[4].end == 13 && breaks2[4].next == 13);
-
-        ionic::Table t1;
-        t1.addRow({ out1 });
-        std::string f1 = t1.format();
-        TEST(f1 == 
-            "+-----+\n"
-            "| AAA |\n"
-			"| BBB |\n"
-            "| CCC |\n"
-			"+-----+\n");
-
-        ionic::Table t2;
-		t2.addRow({ out2 });
-		std::string f2 = t2.format();
-        TEST(f2 ==
-            "+-----+\n"
-            "| AAA |\n"
-            "|     |\n"
-            "| BBB |\n"
-            "|     |\n"
-            "| CCC |\n"
-            "+-----+\n");
     }
     {
         // I saw a bug with 2 column tables, but could never reproduce it.
