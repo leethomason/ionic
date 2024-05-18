@@ -254,6 +254,7 @@ bool IonicTest::test()
         t.addRow({ "AA", "Hello" });
         t.addRow({ "BB", "World" });
         std::string result = t.format();
+        printf("2 col result: %s\n", result.c_str());
         TEST(result == "AA | Hello\nBB | World\n");
     }
     {
