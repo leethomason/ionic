@@ -273,7 +273,6 @@ int main(int argc, const char* argv[])
 			printAllTests = true;
     }
 
-    ionic::Table::initConsole();
     bool okay = ionic::IonicTest::test();
     if (okay)
         std::cout << "All tests passed.\n";

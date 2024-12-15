@@ -72,7 +72,6 @@ class Table {
     friend class IonicTest;
 public:
     static bool colorEnabled;
-    static void initConsole();
 
     Table(const TableOptions& options = TableOptions()) : _options(options) {}
 
@@ -115,6 +114,8 @@ public:
     static std::string colorize(Color c, const std::string& s);
 
 private:
+    static void initConsole();
+
     // Remove CR.
     static void normalizeNL(std::string& s) {
         s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());

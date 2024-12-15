@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <numeric>
 #include <iostream>
+#include <atomic>
 
 #if defined(_WIN32)
 #	define WIN32_LEAN_AND_MEAN
@@ -27,17 +28,24 @@ bool Table::colorEnabled = true;
 
 void Table::initConsole()
 {
+	static std::atomic<bool> init = false;
+	if (!init.exchange(true)) {
 #ifdef _WIN32
-	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	DWORD oldMode = 0;
-	GetConsoleMode(handle, &oldMode);
-	DWORD mode = oldMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	SetConsoleMode(handle, mode);
+		// Win10 setup code, and I did need it there. Now...I have no
+		// Win10 machine and nothing to test this one, so it's questionable
+		// whether I should keep it.
+		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+		DWORD oldMode = 0;
+		GetConsoleMode(handle, &oldMode);
+		DWORD mode = oldMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+		SetConsoleMode(handle, mode);
 #endif
+	}
 }
 
 int Table::consoleWidth() 
 {
+	initConsole();
 #if defined(_WIN32)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
@@ -365,6 +373,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 void Table::print() const
 {
+	initConsole();
 	std::cout << format();
 }
 
