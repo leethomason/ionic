@@ -31,6 +31,9 @@ void Table::initConsole()
 	static std::atomic<bool> init = false;
 	if (!init.exchange(true)) {
 #ifdef _WIN32
+		// Win10 setup code, and I did need it there. Now...I have no
+		// Win10 machine and nothing to test this one, so it's questionable
+		// whether I should keep it.
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		DWORD oldMode = 0;
 		GetConsoleMode(handle, &oldMode);

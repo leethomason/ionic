@@ -59,17 +59,6 @@ Main is kept stable with automated tests.
 
 ## Usage
 
-### Setup
-
-Only once, before output. Call:
-
-```c++
-        ionic::Table::initConsole();
-```
-
-Windows 10 terminals can be grumpy about output in color, and this enables it
-for the current terminal.
-
 ### Creating Tables
 
 1. Construct a Table with TableOptions. (See TableOptions for features that can be set.)
