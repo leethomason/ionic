@@ -113,6 +113,21 @@ public:
     // This does check the colorEnabled flag.
     static std::string colorize(Color c, const std::string& s);
 
+    struct Break {
+        size_t start = 0;   // start of the line
+        size_t end = 0;     // end of the line (exclusive)
+        size_t next = 0;    // internal use
+    };
+
+    // Breaks the text into lines of the given width.
+    // NOTE: Ionic is very low-ascii English. (Which sholud be fixed.)
+    // But this call (and all of them) assume a 1-char is 1-glyph relationship.
+    // params:
+    // text: the input string
+    // width: width to break on, or 0 to query console
+    static std::vector<Break> wordWrap(const std::string& text, int width);
+
+
 private:
     static void initConsole();
 
@@ -128,15 +143,6 @@ private:
 	}
     // Find the number of lines, and the maximum width of the lines.
     static int nLines(const std::string&, int& maxWidth);
-
-    struct Break {
-        size_t start = 0;
-        size_t end = 0;
-        size_t next = 0;
-    };
-
-    // Breaks the text into lines of the given width.
-    static std::vector<Break> wordWrap(const std::string& text, int width);
 
     // Breaks a single line - usually called by wordWrap.
     static Break lineBreak(const std::string& text, size_t start, size_t end, int width);

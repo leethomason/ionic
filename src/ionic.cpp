@@ -345,6 +345,9 @@ std::vector<int> Table::computeWidths(const int w) const
 
 /*static*/ std::vector<Table::Break> Table::wordWrap(const std::string& text, int width)
 {
+	if (width == 0)
+		width = consoleWidth();
+
 	std::vector<Break> lines;
 	size_t start = 0;
 
