@@ -144,7 +144,6 @@ bool IonicTest::test()
         ionic::Table::trimRight(t);
         TEST(t == " aa");
     }
-
     {
         std::string t = "This\r\nis multi-line\n\rstring\n\r  \n";
         Table::normalizeNL(t);
@@ -323,6 +322,10 @@ int main(int argc, const char* argv[])
         t.setCell(2, 6, { ionic::Color::brightCyan }, {});
 
         t.print();
+        std::cout << ionic::Table::colorize(ionic::Color::black, "This is Black text") << " (black)\n";
+        std::cout << ionic::Table::colorize(ionic::Color::darkGray, "This is Dark Gray text") << " (dark gray)\n";
+        std::cout << ionic::Table::colorize(ionic::Color::gray, "This is Gray text") << " (gray)\n";
+        std::cout << ionic::Table::colorize(ionic::Color::white, "This is White text") << " (white)\n";
     }
 
     {

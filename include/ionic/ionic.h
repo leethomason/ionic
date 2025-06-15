@@ -9,24 +9,28 @@
 
 namespace ionic {
 
+// These are mapped to the standard colors, in standard color order.
+// White, black, gray, brightGray are mapped to english names.
 enum class Color : uint8_t {
-    gray,
+    black,
     red,
     green,
     yellow,
     blue,
     magenta,
     cyan,
+    darkGray,
+    kDefault,
 
-    white,
+    gray,
     brightRed,
     brightGreen,
     brightYellow,
     brightBlue,
     brightMagenta,
     brightCyan,
+    white,
 
-    kDefault,
     reset,
 };
 

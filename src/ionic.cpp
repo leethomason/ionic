@@ -84,23 +84,26 @@ int Table::consoleWidth()
 /*static*/const char* Table::Dye::colorCode(Color c)
 {
 	switch (c) {
-	case Color::gray: return "\033[0m";
+	case Color::black: return "\x1B[30m";
 	case Color::red: return "\x1B[31m";
 	case Color::green: return "\x1B[32m";
 	case Color::yellow: return "\x1B[33m";
 	case Color::blue: return "\x1B[34m";
 	case Color::magenta: return "\x1B[35m";
 	case Color::cyan: return "\x1B[36m";
-	case Color::white: return "\x1B[97m";
+	case Color::gray: return "\x1B[37m";    // the brighter gray is here?
+	case Color::kDefault: return "\033[0m";	// the reset value
+
+	case Color::darkGray: return "\x1B[90m";	// and this is the dark gray?
 	case Color::brightRed: return "\x1B[91m";
 	case Color::brightGreen: return "\x1B[92m";
 	case Color::brightYellow: return "\x1B[93m";
 	case Color::brightBlue: return "\x1B[94m";
 	case Color::brightMagenta: return "\x1B[95m";
 	case Color::brightCyan: return "\x1B[96m";
+	case Color::white: return "\x1B[97m";
 
-	case Color::kDefault: return "\033[0m";
-	case Color::reset: return "\033[0m";
+	case Color::reset: return "\033[0m"; // reset again
 	}
 	return "";
 }
