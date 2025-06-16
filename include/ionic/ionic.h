@@ -9,8 +9,18 @@
 
 namespace ionic {
 
+// These are mapped to the standard colors, in standard color order...where that makes sense.
+// On some terminals, there are 4 gray values:
+//    black
+//    gray
+//    brightGray     <-- where this is the "normal" gray value, which will result from "reset"
+//    white
+// On others, the "reset" is a different intensity that any of darkGray, gray, or white.
+// 16 simple colors shouldn't be this complex.
+//
 enum class Color : uint8_t {
-    gray,
+    black,
+
     red,
     green,
     yellow,
@@ -18,7 +28,9 @@ enum class Color : uint8_t {
     magenta,
     cyan,
 
-    white,
+    gray,
+    brightGray,
+
     brightRed,
     brightGreen,
     brightYellow,
@@ -26,9 +38,27 @@ enum class Color : uint8_t {
     brightMagenta,
     brightCyan,
 
-    kDefault,
+    white,
+
+	kDefault, // same as reset - the "default" color which
     reset,
 };
+
+// Returns the terminal code for the given color. 
+// This is a standalone utility function, so it doesn't use any Table flags.
+std::string colorToStr(Color color);
+
+// Converts a string to a Color.
+// Attempts to be file / user / text friendly.
+//   BRIGHT_RED, paleRed -> Color::brightRed
+//   red, dark red -> Color::red 
+//   gray, grey -> Color::gray
+// Note that "dark white" or "bright black" isn't parsed. (As it is 
+// gibberish, despite the spec.) Recognizes: "black", "white", "grey",
+// where "grey" can be modified by "bright", "pale", or "light". The 
+// default grey is "darkGrey" as all the color default to the dark
+// variant.
+Color strToColor(const std::string& str);
 
 enum class Alignment {
     left,
