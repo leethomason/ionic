@@ -49,7 +49,7 @@ enum class Color : uint8_t {
 std::string colorToStr(Color color);
 
 // Converts a string to a Color.
-// Attemptys to be file / user / text friendly.
+// Attempts to be file / user / text friendly.
 //   BRIGHT_RED, paleRed -> Color::brightRed
 //   red, dark red -> Color::red 
 //   gray, grey -> Color::gray
