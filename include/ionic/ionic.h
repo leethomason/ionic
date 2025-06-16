@@ -60,6 +60,9 @@ std::string colorToStr(Color color);
 // variant.
 Color strToColor(const std::string& str);
 
+// Returns the terminal code for the given color.
+std::string colorCode(Color color);
+
 enum class Alignment {
     left,
     right,
@@ -188,8 +191,6 @@ private:
     struct Dye {
         Dye(Color c, std::string& s);
         ~Dye();
-
-        static const char* colorCode(Color c);
 
       private:
         Color _c;

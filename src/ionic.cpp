@@ -81,7 +81,7 @@ int Table::consoleWidth()
 #endif // _WIN32
 
 
-/*static*/const char* Table::Dye::colorCode(Color c)
+std::string colorCode(Color c)
 {
 	switch (c) {
 	case Color::black: return "\x1B[30m";
@@ -184,12 +184,12 @@ Color strToColor(const std::string& _str)
 Table::Dye::Dye(Color c, std::string& s) : _c(c), _s(s)
 {
 	if (_c != Color::kDefault && Table::colorEnabled)
-		_s += Dye::colorCode(c);
+		_s += colorCode(c);
 }
 
 Table::Dye::~Dye() {
 	if (_c != Color::kDefault && Table::colorEnabled)
-		_s += Dye::colorCode(Color::reset);
+		_s += colorCode(Color::reset);
 }
 
 void append(std::string& s, char a, char b) 
@@ -605,8 +605,8 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 	if (c == Color::reset || !colorEnabled)
 		return s;
 
-	std::string in = Dye::colorCode(c);
-	std::string out = Dye::colorCode(Color::reset);
+	std::string in = colorCode(c);
+	std::string out = colorCode(Color::reset);
 
 	return in + s + out;
 }
