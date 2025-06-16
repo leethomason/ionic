@@ -91,10 +91,10 @@ int Table::consoleWidth()
 	case Color::blue: return "\x1B[34m";
 	case Color::magenta: return "\x1B[35m";
 	case Color::cyan: return "\x1B[36m";
-	case Color::gray: return "\x1B[37m";    // the brighter gray is here?
-	case Color::kDefault: return "\033[0m";	// the reset value
+	
+	case Color::brightGray: return "\x1B[37m";    // the brighter gray is here?
+	case Color::gray: return "\x1B[90m";	// and this is the dark gray?
 
-	case Color::darkGray: return "\x1B[90m";	// and this is the dark gray?
 	case Color::brightRed: return "\x1B[91m";
 	case Color::brightGreen: return "\x1B[92m";
 	case Color::brightYellow: return "\x1B[93m";
@@ -103,9 +103,82 @@ int Table::consoleWidth()
 	case Color::brightCyan: return "\x1B[96m";
 	case Color::white: return "\x1B[97m";
 
+	case Color::kDefault: return "\033[0m";	// the reset value
 	case Color::reset: return "\033[0m"; // reset again
 	}
 	return "";
+}
+
+std::string colorToStr(Color color)
+{
+	switch (color) {
+	case Color::black: return "black";
+	case Color::red: return "red";
+	case Color::green: return "green";
+	case Color::yellow: return "yellow";
+	case Color::blue: return "blue";
+	case Color::magenta: return "magenta";
+	case Color::cyan: return "cyan";
+	case Color::brightGray: return "brightGray";
+	case Color::gray: return "gray";
+	case Color::brightRed: return "brightRed";
+	case Color::brightGreen: return "brightGreen";
+	case Color::brightYellow: return "brightYellow";
+	case Color::brightBlue: return "brightBlue";
+	case Color::brightMagenta: return "brightMagenta";
+	case Color::brightCyan: return "brightCyan";
+	case Color::white: return "white";
+	case Color::kDefault: return "default";
+	case Color::reset: return "reset";
+	}
+	return "reset";
+}
+
+Color strToColor(const std::string& _str)
+{
+	// pull out spaces 
+	std::string str;
+	for (char s : _str) {
+		if (s == '_' || s == '-' || std::isspace(s))
+			continue;
+		str += char(std::tolower(s));
+	}
+
+	bool dark = true;
+	// c++ 17: don't have starts_with()
+	const std::string LIGHT = "light";
+	const std::string BRIGHT = "bright";
+	const std::string PALE = "pale";
+	if (str.compare(0, LIGHT.size(), LIGHT) == 0) {
+		dark = false;
+		str = str.substr(LIGHT.size());
+	}
+	else if (str.compare(0, BRIGHT.size(), BRIGHT) == 0) {
+		dark = false;
+		str = str.substr(BRIGHT.size());
+	}
+	else if (str.compare(0, PALE.size(), PALE) == 0) {
+		dark = false;
+		str = str.substr(PALE.size());
+	}
+
+	const std::string DARK = "dark";
+	if (str.compare(0, DARK.size(), DARK) == 0) {
+		str = str.substr(DARK.size());
+	}
+
+	if (str == "black") return Color::black;
+	if (str == "white") return Color::white;
+	if (str == "gray" || str == "grey") return dark ? Color::gray : Color::brightGray;
+
+	if (str == "red") return dark ? Color::red : Color::brightRed;
+	if (str == "green") return dark ? Color::green : Color::brightGreen;
+	if (str == "yellow") return dark ? Color::yellow : Color::brightYellow;
+	if (str == "blue") return dark ? Color::blue : Color::brightBlue;
+	if (str == "magenta") return dark ? Color::magenta : Color::brightMagenta;
+	if (str == "cyan") return dark ? Color::cyan : Color::brightCyan;
+
+	return Color::reset;
 }
 
 Table::Dye::Dye(Color c, std::string& s) : _c(c), _s(s)

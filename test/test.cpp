@@ -260,6 +260,31 @@ bool IonicTest::test()
         std::string t = ionic::Table::colorize(ionic::Color::red, "Hello");
         TEST(t == "\033[31mHello\033[0m");
     }
+    {
+        // Colors
+        TEST(ionic::strToColor("red") == Color::red);
+        TEST(ionic::strToColor("DARK_GREEN") == Color::green);
+        TEST(ionic::strToColor("dark yellow") == Color::yellow);
+        TEST(ionic::strToColor("darkBlue") == Color::blue);
+        TEST(ionic::strToColor("Magenta") == Color::magenta);
+        TEST(ionic::strToColor("cyan") == Color::cyan);
+
+        TEST(ionic::strToColor("brightRed") == Color::brightRed);
+        TEST(ionic::strToColor("bright green") == Color::brightGreen);
+        TEST(ionic::strToColor("PALE_YELLOW") == Color::brightYellow);
+        TEST(ionic::strToColor("LIGHT-BLUE") == Color::brightBlue);
+        TEST(ionic::strToColor("pale magenta") == Color::brightMagenta);
+        TEST(ionic::strToColor("BrightCyan") == Color::brightCyan);
+
+        TEST(ionic::strToColor("Black") == Color::black);
+        TEST(ionic::strToColor("grey") == Color::gray);
+        TEST(ionic::strToColor("light gray") == Color::brightGray);
+        TEST(ionic::strToColor("WHITE") == Color::white);
+
+        TEST(ionic::strToColor("reset") == Color::reset);
+        TEST(ionic::strToColor("default") == Color::reset);
+        TEST(ionic::strToColor("foobar") == Color::reset);            
+    }
     return true;
 }
 }
@@ -323,8 +348,8 @@ int main(int argc, const char* argv[])
 
         t.print();
         std::cout << ionic::Table::colorize(ionic::Color::black, "This is Black text") << " (black)\n";
-        std::cout << ionic::Table::colorize(ionic::Color::darkGray, "This is Dark Gray text") << " (dark gray)\n";
-        std::cout << ionic::Table::colorize(ionic::Color::gray, "This is Gray text") << " (gray)\n";
+        std::cout << ionic::Table::colorize(ionic::Color::gray, "This is Dark Gray text") << " (dark gray)\n";
+        std::cout << ionic::Table::colorize(ionic::Color::brightGray, "This is Gray text") << " (gray)\n";
         std::cout << ionic::Table::colorize(ionic::Color::white, "This is White text") << " (white)\n";
     }
 
