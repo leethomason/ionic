@@ -53,7 +53,7 @@ std::string colorToStr(Color color);
 //   BRIGHT_RED, paleRed -> Color::brightRed
 //   red, dark red -> Color::red 
 //   gray, grey -> Color::gray
-// Note that "dark while" or "bright black" isn't parsed. (As it is 
+// Note that "dark white" or "bright black" isn't parsed. (As it is 
 // gibberish, despite the spec.) Recognizes: "black", "white", "grey",
 // where "grey" can be modified by "bright", "pale", or "light". The 
 // default grey is "darkGrey" as all the color default to the dark
