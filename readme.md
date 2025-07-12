@@ -40,7 +40,8 @@ Then in your project, you can link to the ionic library:
 
 ```cmake
 add_executable(MyExample simple_example.cpp)
-target_link_libraries(MyExample ionic::ionic)
+target_include_directories(MyExample PUBLIC ${ionic_SOURCE_DIR}/include)        # and other includes, of course
+target_link_libraries(MyExample private ionic)
 ```
 
 You can also just copy the two files (ionic.h and ionic.cpp) into your project.
