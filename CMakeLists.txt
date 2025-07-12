@@ -23,6 +23,9 @@ set (HEADERS
 
 add_library(ionic STATIC ${SOURCES} ${HEADERS})
 
+# Create an alias for the library with a namespace
+add_library(ionic::ionic ALIAS ionic)
+
 target_include_directories(ionic
     PRIVATE
         # where the library itself will look for its internal headers
@@ -34,16 +37,24 @@ target_include_directories(ionic
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADERS}")
-
-enable_testing()
-
-add_test(
-  NAME ionic_test
-  COMMAND ionic_test
+# Set additional properties for the library
+set_target_properties(ionic PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
 )
 
-add_executable(ionic_test "test/test.cpp")  
-target_link_libraries(ionic_test ionic)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADERS}")
 
-# add_executable(ionic_test "test/test.cpp" "src/ionic.cpp")
+# Only build tests if this is the top-level project
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    enable_testing()
+
+    add_test(
+      NAME ionic_test
+      COMMAND ionic_test
+    )
+
+    add_executable(ionic_test "test/test.cpp")  
+    target_link_libraries(ionic_test ionic)
+endif()
