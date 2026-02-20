@@ -326,25 +326,25 @@ int main(int argc, const char* argv[])
         options.tableColor = ionic::Color::blue;
         ionic::Table t(options);
 
+		t.setColumnColor({ 
+            {},
+            ionic::Color::red, 
+            ionic::Color::green, 
+            ionic::Color::blue, 
+            ionic::Color::yellow, 
+            ionic::Color::magenta,
+            ionic::Color::cyan});
         t.addRow({ "", "R", "G", "B", "Y", "M", "C" });
         t.addRow({ "Normal", "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" });
+        t.setColumnColor({
+			ionic::Color::white,
+            ionic::Color::brightRed,
+            ionic::Color::brightGreen,
+            ionic::Color::brightBlue,
+            ionic::Color::brightYellow,
+            ionic::Color::brightMagenta,
+            ionic::Color::brightCyan});
         t.addRow({ "Bright", "Red", "Green", "Blue", "Yellow", "Magenta", "Cyan" });
-
-        t.setRow(0, { ionic::Color::white }, {});
-        t.setCell(2, 0, { ionic::Color::white }, {});
-
-        t.setCell(1, 1, { ionic::Color::red }, {});
-        t.setCell(2, 1, { ionic::Color::brightRed }, {});
-        t.setCell(1, 2, { ionic::Color::green }, {});
-        t.setCell(2, 2, { ionic::Color::brightGreen }, {});
-        t.setCell(1, 3, { ionic::Color::blue }, {});
-        t.setCell(2, 3, { ionic::Color::brightBlue }, {});
-        t.setCell(1, 4, { ionic::Color::yellow }, {});
-        t.setCell(2, 4, { ionic::Color::brightYellow }, {});
-        t.setCell(1, 5, { ionic::Color::magenta }, {});
-        t.setCell(2, 5, { ionic::Color::brightMagenta }, {});
-        t.setCell(1, 6, { ionic::Color::cyan }, {});
-        t.setCell(2, 6, { ionic::Color::brightCyan }, {});
 
         t.print();
         std::cout << ionic::Table::colorize(ionic::Color::black, "This is Black text") << " (black)\n";
@@ -356,10 +356,11 @@ int main(int argc, const char* argv[])
     {
         ionic::Table t;
         t.setColumnFormat({ {ionic::ColType::fixed, 10}, {ionic::ColType::fixed, 10}, {ionic::ColType::fixed, 10} });
+		t.setColumnLook({ 
+            {ionic::Color::brightGreen, ionic::Alignment::left}, 
+            {ionic::Color::yellow, ionic::Alignment::center}, 
+            {ionic::Color::brightCyan, ionic::Alignment::right} });
         t.addRow({ { "This is left aligned text" }, { "This text is center aligned" }, { "And finally this is right aligned" } });
-        t.setColumn(0, {ionic::Color::brightGreen}, { ionic::Alignment::left });
-        t.setColumn(1, {ionic::Color::yellow}, { ionic::Alignment::center });
-        t.setColumn(2, {ionic::Color::brightCyan}, { ionic::Alignment::right });
         t.print();
     }
 

@@ -112,13 +112,21 @@ public:
         ColType type = ColType::flex;
         int requestedWidth = 0;
     };
-    void setColumnFormat(const std::vector<Column>& cols);
-    void addRow(const std::vector<std::string>& row);
+    struct ColumnFormat {
+		std::optional<Color> color;
+		std::optional<Alignment> alignment;
+	};
+    struct ColumnLook {
+		std::optional<Color> color;
+		std::optional<Alignment> alignment;
+    };
 
-    void setCell(int row, int col, std::optional<Color>, std::optional<Alignment>);
-    void setRow(int row, std::optional<Color>, std::optional<Alignment>);
-    void setColumn(int col, std::optional<Color>, std::optional<Alignment>);
-    void setTable(std::optional<Color>, std::optional<Alignment>);
+    void setColumnFormat(const std::vector<Column>& cols);
+    void setColumnColor(const std::vector<std::optional<Color>>& cols);
+    void setColumnAlignment(const std::vector<std::optional<Alignment>>& cols);
+	void setColumnLook(const std::vector<ColumnLook>& cols);
+
+    void addRow(const std::vector<std::string>& row);
 
     std::string format() const;
     void print() const;
@@ -199,6 +207,8 @@ private:
 
     TableOptions _options;
     std::vector<Column> _cols;
+	std::vector<ColumnFormat> _colFormats;
+	std::vector<ColumnLook> _colLooks;
     std::vector<std::vector<Cell>> _rows;
 
     std::vector<int> computeWidths(const int width) const;   // returns inner column sizes for the given width

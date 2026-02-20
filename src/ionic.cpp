@@ -232,7 +232,75 @@ void Table::printCenter(std::string& s) const
 
 void Table::setColumnFormat(const std::vector<Table::Column>& cols)
 {
-	_cols = cols;
+	if (_cols.empty()) {
+		_cols = cols;
+		_colFormats.resize(_cols.size());
+		_colLooks.resize(_cols.size());
+		return;
+	}
+	assert(cols.size() == _cols.size());
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i] = cols[i];
+	}
+}
+
+void Table::setColumnColor(const std::vector<std::optional<Color>>& colors)
+{
+	if (colors.empty()) {
+		for (size_t i = 0; i < _colFormats.size(); ++i) {
+			_colFormats[i].color = std::nullopt;
+		}
+		return;
+	}
+	if (_cols.empty()) {
+		_cols.resize(colors.size());
+		_colFormats.resize(colors.size());
+		_colLooks.resize(colors.size());
+	}
+	assert(_colFormats.size() == colors.size());
+	for (size_t i = 0; i < _colFormats.size(); ++i) {
+		_colFormats[i].color = colors[i];
+	}
+}
+
+void Table::setColumnAlignment(const std::vector<std::optional<Alignment>>& align)
+{
+	if (align.empty()) {
+		for (size_t i = 0; i < _colFormats.size(); ++i) {
+			_colFormats[i].alignment = std::nullopt;
+		}
+		return;
+	}
+	if (_cols.empty()) {
+		_cols.resize(align.size());
+		_colFormats.resize(align.size());
+		_colLooks.resize(align.size());
+	}
+	assert(_colFormats.size() == align.size());
+	for (size_t i = 0; i < _colFormats.size(); ++i) {
+		_colFormats[i].alignment = align[i];
+	}
+}
+
+void Table::setColumnLook(const std::vector<ColumnLook>& looks)
+{
+	if (looks.empty()) {
+		for (size_t i = 0; i < _colFormats.size(); ++i) {
+			_colFormats[i].color = std::nullopt;
+			_colFormats[i].alignment = std::nullopt;
+		}
+		return;
+	}
+	if (_cols.empty()) {
+		_cols.resize(looks.size());
+		_colFormats.resize(looks.size());
+		_colLooks.resize(looks.size());
+	}
+	assert(_colFormats.size() == looks.size());
+	for (size_t i = 0; i < _colFormats.size(); ++i) {
+		_colFormats[i].color = looks[i].color;
+		_colFormats[i].alignment = looks[i].alignment;
+	}
 }
 
 /*static*/ int Table::nLines(const std::string& s, int& maxWidth)
@@ -270,42 +338,10 @@ void Table::addRow(const std::vector<std::string>& row)
 		trimRight(c.text);		// right trailing spaces are presumably extraneous
 
 		c.nLines = nLines(c.text, c.desiredWidth);
-		c.color = _options.textColor;
-		c.alignment = _options.alignment;
+		c.color = _colFormats[i].color ? *_colFormats[i].color : _options.textColor;
+		c.alignment = _colFormats[i].alignment ? *_colFormats[i].alignment : _options.alignment;
 	}
 	_rows.push_back(r);
-}
-
-void Table::setCell(int row, int col, std::optional<Color> color, std::optional<Alignment> alignment)
-{
-	Cell& cell = _rows[row][col];
-	if (color) {
-		cell.color = *color;
-	}
-	if (alignment) {
-		cell.alignment = *alignment;
-	}
-}
-
-void Table::setRow(int row, std::optional<Color> color, std::optional<Alignment> alignment)
-{
-	for (size_t c = 0; c < _rows[row].size(); ++c) {
-		setCell(row, int(c), color, alignment);
-	}
-}
-
-void Table::setColumn(int col, std::optional<Color> color, std::optional<Alignment> alignment)
-{
-	for (size_t r = 0; r < _rows.size(); ++r) {
-		setCell(int(r), col, color, alignment);
-	}
-}
-
-void Table::setTable(std::optional<Color> color, std::optional<Alignment> alignment)
-{
-	for (size_t r = 0; r < _rows.size(); ++r) {
-		setRow(int(r), color, alignment);
-	}
 }
 
 std::vector<int> Table::computeWidths(const int w) const
