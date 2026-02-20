@@ -81,20 +81,20 @@ Main is kept stable with automated tests.
             {ionic::ColType::flex} });
 ```
 
-3. Add text rows with `addRow()`. The number of columns in `addRow()` calls and
+4. Optional: Set the color and alignment of columns. If you call the setColumnFormat()
+   and related methods, it will change the format, color, or alignment for future
+   addRow() calls.
+
+```c++
+        table.setColumnColor({ {ionic::Color::red}, {ionic::Color::green} });
+```
+
+4. Add text rows with `addRow()`. The number of columns in `addRow()` calls and
    `setColumnFormat()` calls must match.
 
 ```c++
         table.addRow({ "A", "B" });
         table.addRow({ "C", "D" });
-```
-
-4. Optional: Set the color and alignment of individual cells, rows, columns, or the entire table. Use `setCell()`, `setRow()`, `setColumn()`, and `setTable()`.
-
-   `std::optional` is used here, so you can specify color and/or alignment.
-
-```c++
-        table.setCell(1, 1, { ionic::Color::red }, {});
 ```
 
 5. Call `format()` to get the formatted table as a string, or `print()` to print it to the console or use the `<<` operator to print it to an ostream.
