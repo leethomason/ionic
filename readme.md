@@ -9,7 +9,7 @@ A C++ library for outputting tables to the console.
 Tested on Windows, Linux, and OSX.
 
 Ionic is a simple library for outputting tables to the console. It can print
-in color, line break, align text, and supports several output styles.
+in color, line-break, align text, and supports several output styles.
 Ionic is simple; it doesn't have a lot of features, but it's easy to use, and
 runs reasonably efficiently.
 
@@ -18,7 +18,7 @@ much simpler, both in code and features. Ionic has built-in support for
 terminal width, which is a convenience Tabulate does not have.
 
 It has no dependencies beyond C++ 17. Ionic does have platform code - it calls
-windows / linux / osx functions to initialize the console and query size.
+Windows / Linux / OSX functions to initialize the console and query size.
 
 ## Install and Build
 
@@ -41,7 +41,7 @@ Then in your project, you can link to the ionic library:
 ```cmake
 add_executable(MyExample simple_example.cpp)
 target_include_directories(MyExample PUBLIC ${ionic_SOURCE_DIR}/include)        # and other includes, of course
-target_link_libraries(MyExample private ionic)
+target_link_libraries(MyExample PRIVATE ionic)
 ```
 
 You can also just copy the two files (ionic.h and ionic.cpp) into your project.
@@ -81,7 +81,7 @@ Main is kept stable with automated tests.
             {ionic::ColType::flex} });
 ```
 
-4. Optional: Set the color and alignment of columns. If you call the setColumnFormat()
+3. Optional: Set the color and alignment of columns. If you call the setColumnFormat()
    and related methods, it will change the format, color, or alignment for future
    addRow() calls.
 
@@ -105,7 +105,7 @@ Main is kept stable with automated tests.
 
 ### Complete Example
 
-More examples in the "tests.cpp" file.
+More examples in the "test.cpp" file.
 
 ```c++
     #include "ionic/ionic.h"
@@ -129,13 +129,13 @@ More examples in the "tests.cpp" file.
 
 ### Notes on Color
 
-Colors are close (but not the same) between OSs and shells. There are a set of 
+Colors are close (but not the same) between OSs and shells. There is a set of
 basic colors that are usually supported. (But there are an endless variety of
 terminal shells.)
 
 Ionic uses the approach of inserting color commands into the generated string.
-This has some advantages and some disadvantages. If color isn't in your environment,
-you can set the `static`:
+This has some advantages and some disadvantages. If color isn't supported in your environment,
+you can set the static variable:
 
 ```c++
         ionic::Table::colorEnabled = false;
@@ -145,7 +145,7 @@ To disable color output.
 
 ### Whitespace
 
-Hopefully whitespace is handled "as you would expect." Nevertheless, let's
+Hopefully whitespace is handled as you would expect. Nevertheless, let's
 take a look.
 
 Consider the canonical string `Hello, World\n` to
@@ -153,18 +153,18 @@ illustrate how ionic handles whitespace.
 
 Note: The trailing newline (and other whitespace) will be discarded.
 
-Output without breaks:
+Output without line breaks:
 
 ```text
 Hello, World
-````
+```
 
-Output if breaks used:
+Output if line breaks are used:
 
 ```text
 Hello,
 World
-````
+```
 
 Now consider: `Hello,\nWorld\n`
 
@@ -173,7 +173,7 @@ The output will always be:
 ```text
 Hello,
 World
-````
+```
 
 ## Thanks
 
