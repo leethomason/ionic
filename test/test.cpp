@@ -14,7 +14,7 @@ void PrintRuler(int w)
 
 void AddVar4Rows(ionic::Table& table)
 {
-    table.setColumnFormat({ {ionic::ColType::fixed, 2}, {ionic::ColType::flex}, {ionic::ColType::flex} });
+    table.setColumns({ {ionic::ColType::fixed, 2}, {ionic::ColType::flex}, {ionic::ColType::flex} });
     table.addRow({ "0", "A", "The Outer World" });
     table.addRow({ "1", "Hello", "And Another" });
     table.addRow({ "2", "World", "Farther Out" });
@@ -311,7 +311,7 @@ int main(int argc, const char* argv[])
         ionic::TableOptions options;
         options.maxWidth = 50;
         ionic::Table t5(options);
-        t5.setColumnFormat({ {ionic::ColType::fixed, 1},
+        t5.setColumns({ {ionic::ColType::fixed, 1},
                              {ionic::ColType::fixed, 4},
                              {ionic::ColType::flex},
                              {ionic::ColType::flex},
@@ -355,7 +355,7 @@ int main(int argc, const char* argv[])
 
     {
         ionic::Table t;
-        t.setColumnFormat({ {ionic::ColType::fixed, 10}, {ionic::ColType::fixed, 10}, {ionic::ColType::fixed, 10} });
+        t.setColumns({ {ionic::ColType::fixed, 10}, {ionic::ColType::fixed, 10}, {ionic::ColType::fixed, 10} });
 		t.setColumnLook({ 
             {ionic::Color::brightGreen, ionic::Alignment::left}, 
             {ionic::Color::yellow, ionic::Alignment::center}, 
@@ -370,7 +370,7 @@ int main(int argc, const char* argv[])
             ionic::TableOptions options;
             options.maxWidth = 80;
             ionic::Table t(options);
-            t.setColumnFormat({ {ionic::ColType::fixed, 1},
+            t.setColumns({ {ionic::ColType::fixed, 1},
                                  {ionic::ColType::fixed, 4},
                                  {ionic::ColType::flex},
                                  {ionic::ColType::flex},
@@ -382,7 +382,7 @@ int main(int argc, const char* argv[])
         }
         {
             ionic::Table t6;
-            t6.setColumnFormat({ {ionic::ColType::fixed, 1},
+            t6.setColumns({ {ionic::ColType::fixed, 1},
                                  {ionic::ColType::fixed, 4},
                                  {ionic::ColType::flex},
                                  {ionic::ColType::flex},
@@ -405,7 +405,7 @@ int main(int argc, const char* argv[])
             ionic::TableOptions options;
             options.indent = 4;
             ionic::Table t(options);
-            t.setColumnFormat({ {ionic::ColType::fixed, 15} });
+            t.setColumns({ {ionic::ColType::fixed, 15} });
             t.addRow({ "123456789012345" });
             t.addRow({ "It was a bright cold day in April, and the clocks were striking thirteen." });
             std::cout << t;

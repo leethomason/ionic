@@ -74,6 +74,22 @@ enum class ColType {
     fixed, 	    // specified width
 };
 
+struct Column {
+    ColType type = ColType::flex;
+    int requestedWidth = 0;
+};
+
+struct ColumnFormat {
+    std::optional<Color> color;
+    std::optional<Alignment> alignment;
+};
+
+struct ColumnLook {
+    std::optional<Color> color;
+    std::optional<Alignment> alignment;
+};
+
+
 struct TableOptions {
     bool outerBorder = true;                    // true to draw the outer border
     bool innerHDivider = true;				    // true to draw horizontal dividers between rows
@@ -93,11 +109,12 @@ struct TableOptions {
 
 /*
 *   1. Construct a Table with TableOptions. (See TableOptions for features that can be set.)
-*   2. Optional: Set the column format with setColumnFormat(). You can specify columns to be
+*   2. Optional: Set the column format with setColumns(). You can specify columns to be
 *      fixed width or flex width. If you don't setColumFormat(), all columns will be flex.
 *   3. Add text rows with addRow(). The number of columns must match the number of columns in the format.
 *   4. Optional: Set the color and alignment of individual cells, rows, columns, or the entire table.
-*      Use setCell(), setRow(), setColumn(), and setTable().
+*      Use setCell(), setRow(), setColumn(), and setTable(). Again, the number of columns must match
+*      in all calls.
 *   5. Call format() to get the formatted table as a string, or print() to print it to the console,
 *      or use the << operator to print it to an ostream.
 */
@@ -108,29 +125,31 @@ public:
 
     Table(const TableOptions& options = TableOptions()) : _options(options) {}
 
-    struct Column {
-        ColType type = ColType::flex;
-        int requestedWidth = 0;
-    };
-    struct ColumnFormat {
-		std::optional<Color> color;
-		std::optional<Alignment> alignment;
-	};
-    struct ColumnLook {
-		std::optional<Color> color;
-		std::optional<Alignment> alignment;
-    };
-
-    void setColumnFormat(const std::vector<Column>& cols);
-    void setColumnColor(const std::vector<std::optional<Color>>& cols);
-    void setColumnAlignment(const std::vector<std::optional<Alignment>>& cols);
-	void setColumnLook(const std::vector<ColumnLook>& cols);
-
+    // Add a row of text.
     void addRow(const std::vector<std::string>& row);
 
+    // Set the number and sizing policy of the columns.
+    // This affects the entire table.
+    void setColumns(const std::vector<Column>& cols);
+
+	// Set the color of the columns. A nullopt means to use the default color.
+    // This will change the formatting of future addRow() calls.
+    void setColumnColor(const std::vector<std::optional<Color>>& cols);
+
+	// Set the alignment of the columns. A nullopt means to use the default alignment.
+	// Affects future addRow() calls.
+    void setColumnAlignment(const std::vector<std::optional<Alignment>>& cols);
+
+	// Set both the color and alignment of the columns. A nullopt means to use the default value.
+	// This will change the formatting of future addRow() calls.
+	void setColumnLook(const std::vector<ColumnLook>& cols);
+
+    // Return the table as a string.
     std::string format() const;
+    // Output the table to the console.
     void print() const;
 
+    // Output the table to the std out.
     friend std::ostream& operator<<(std::ostream& os, const Table& t) {
         os << t.format();
         return os;

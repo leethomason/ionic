@@ -230,7 +230,7 @@ void Table::printCenter(std::string& s) const
 		append(s, ' ', ' ');
 }
 
-void Table::setColumnFormat(const std::vector<Table::Column>& cols)
+void Table::setColumns(const std::vector<Column>& cols)
 {
 	if (_cols.empty()) {
 		_cols = cols;
@@ -324,9 +324,9 @@ void Table::setColumnLook(const std::vector<ColumnLook>& looks)
 void Table::addRow(const std::vector<std::string>& row)
 {
 	if (_cols.empty()) {
-		std::vector<Table::Column> cvec;
+		std::vector<Column> cvec;
 		cvec.resize(row.size(), Column{ ColType::flex, 0 });
-		setColumnFormat(cvec);
+		setColumns(cvec);
 	}
 	assert(row.size() == _cols.size());
 	
