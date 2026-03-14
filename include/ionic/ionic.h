@@ -68,7 +68,7 @@ enum class Alignment {
 };
 
 struct Column {
-    int requestedWidth = 0;     // flex width
+    int requestedWidth = 0;     // 0 = flex (auto-sized), >0 = fixed width
     std::optional<Color> color;
     std::optional<Alignment> alignment;
 };
@@ -101,8 +101,9 @@ struct TableOptions {
 *      fixed or flex width, and optionally set per-column color and alignment inline.
 *      If you don't call setColumns(), all columns will be flex with default color/alignment.
 *   3. Add text rows with addRow(). Column count must match across all calls.
-*   4. Optional: Adjust color/alignment after the fact with setColumnColor(),
-*      setColumnAlignment(), or setColumnLook(). These affect future addRow() calls.
+*   4. Optional: Adjust color/alignment after the fact with updateColumns().
+*      Changes affect future addRow() calls. Requires setColumns() or addRow() to have
+*      been called first to establish the column count.
 *   5. Call format() to get the formatted table as a string, or print() to print it to the console,
 *      or use the << operator to print it to an ostream.
 */
@@ -119,12 +120,16 @@ public:
     // Initially set the number and sizing policy of the columns.
     void setColumns(const std::vector<Column>& cols);
 
-    // Set both the color and alignment of the columns. A nullopt means to use the default value.
-	// This will change the formatting of future addRow() calls.
-	void updateColumns(const std::vector<ColumnFormat>& cols);
+    // Update the color and alignment of columns. A nullopt field means use the table default.
+    // An empty vector clears all color/alignment overrides.
+    // Requires columns to already be established via setColumns() or addRow().
+    // Changes affect future addRow() calls.
+    void updateColumns(const std::vector<ColumnFormat>& cols);
 
-	// Just set the colors. Changes the formatting of future addRow() calls.
-	void updateColumns(const std::vector<Color>& colors);
+    // Update just the colors of columns. An empty vector clears all color overrides.
+    // Requires columns to already be established via setColumns() or addRow().
+    // Changes affect future addRow() calls.
+    void updateColumns(const std::vector<Color>& colors);
 
     // Return the table as a string.
     std::string format() const;
