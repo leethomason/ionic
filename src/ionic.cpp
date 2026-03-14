@@ -63,12 +63,12 @@ int Table::consoleWidth()
 	return w;
 #elif  __APPLE__
     struct winsize w;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    return w.ws_col;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    return w.ws_col > 0 ? w.ws_col : 80;
 #elif __linux__
 	struct winsize w;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-	return w.ws_col;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+	return w.ws_col > 0 ? w.ws_col : 80;
 #else
 #	error "Not implemented"
 #endif // _WIN32
@@ -103,7 +103,6 @@ std::string colorCode(Color c)
 	case Color::brightCyan: return "\x1B[96m";
 	case Color::white: return "\x1B[97m";
 
-	case Color::kDefault: return "\033[0m";	// the reset value
 	case Color::reset: return "\033[0m"; // reset again
 	}
 	return "";
@@ -128,7 +127,6 @@ std::string colorToStr(Color color)
 	case Color::brightMagenta: return "brightMagenta";
 	case Color::brightCyan: return "brightCyan";
 	case Color::white: return "white";
-	case Color::kDefault: return "default";
 	case Color::reset: return "reset";
 	}
 	return "reset";
@@ -183,12 +181,12 @@ Color strToColor(const std::string& _str)
 
 Table::Dye::Dye(Color c, std::string& s) : _c(c), _s(s)
 {
-	if (_c != Color::kDefault && Table::colorEnabled)
+	if (_c != Color::reset && Table::colorEnabled)
 		_s += colorCode(c);
 }
 
 Table::Dye::~Dye() {
-	if (_c != Color::kDefault && Table::colorEnabled)
+	if (_c != Color::reset && Table::colorEnabled)
 		_s += colorCode(Color::reset);
 }
 
@@ -234,8 +232,6 @@ void Table::setColumns(const std::vector<Column>& cols)
 {
 	if (_cols.empty()) {
 		_cols = cols;
-		_colFormats.resize(_cols.size());
-		_colLooks.resize(_cols.size());
 		return;
 	}
 	assert(cols.size() == _cols.size());
@@ -244,62 +240,33 @@ void Table::setColumns(const std::vector<Column>& cols)
 	}
 }
 
-void Table::setColumnColor(const std::vector<std::optional<Color>>& colors)
+void Table::updateColumns(const std::vector<ColumnFormat>& formats)
 {
+	assert(formats.empty() || _cols.size() == formats.size());
+	if (formats.empty()) {
+		for (size_t i = 0; i < _cols.size(); ++i) {
+			_cols[i].color = std::nullopt;
+			_cols[i].alignment = std::nullopt;
+		}
+		return;
+	}
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i].color = formats[i].color;
+		_cols[i].alignment = formats[i].alignment;
+	}
+}
+
+void Table::updateColumns(const std::vector<Color>& colors)
+{
+	assert(colors.empty() || _cols.size() == colors.size());
 	if (colors.empty()) {
-		for (size_t i = 0; i < _colFormats.size(); ++i) {
-			_colFormats[i].color = std::nullopt;
+		for (size_t i = 0; i < _cols.size(); ++i) {
+			_cols[i].color = std::nullopt;
 		}
 		return;
 	}
-	if (_cols.empty()) {
-		_cols.resize(colors.size());
-		_colFormats.resize(colors.size());
-		_colLooks.resize(colors.size());
-	}
-	assert(_colFormats.size() == colors.size());
-	for (size_t i = 0; i < _colFormats.size(); ++i) {
-		_colFormats[i].color = colors[i];
-	}
-}
-
-void Table::setColumnAlignment(const std::vector<std::optional<Alignment>>& align)
-{
-	if (align.empty()) {
-		for (size_t i = 0; i < _colFormats.size(); ++i) {
-			_colFormats[i].alignment = std::nullopt;
-		}
-		return;
-	}
-	if (_cols.empty()) {
-		_cols.resize(align.size());
-		_colFormats.resize(align.size());
-		_colLooks.resize(align.size());
-	}
-	assert(_colFormats.size() == align.size());
-	for (size_t i = 0; i < _colFormats.size(); ++i) {
-		_colFormats[i].alignment = align[i];
-	}
-}
-
-void Table::setColumnLook(const std::vector<ColumnLook>& looks)
-{
-	if (looks.empty()) {
-		for (size_t i = 0; i < _colFormats.size(); ++i) {
-			_colFormats[i].color = std::nullopt;
-			_colFormats[i].alignment = std::nullopt;
-		}
-		return;
-	}
-	if (_cols.empty()) {
-		_cols.resize(looks.size());
-		_colFormats.resize(looks.size());
-		_colLooks.resize(looks.size());
-	}
-	assert(_colFormats.size() == looks.size());
-	for (size_t i = 0; i < _colFormats.size(); ++i) {
-		_colFormats[i].color = looks[i].color;
-		_colFormats[i].alignment = looks[i].alignment;
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i].color = colors[i];
 	}
 }
 
@@ -325,7 +292,7 @@ void Table::addRow(const std::vector<std::string>& row)
 {
 	if (_cols.empty()) {
 		std::vector<Column> cvec;
-		cvec.resize(row.size(), Column{ ColType::flex, 0 });
+		cvec.resize(row.size(), Column{ 0 });
 		setColumns(cvec);
 	}
 	assert(row.size() == _cols.size());
@@ -338,8 +305,8 @@ void Table::addRow(const std::vector<std::string>& row)
 		trimRight(c.text);		// right trailing spaces are presumably extraneous
 
 		c.nLines = nLines(c.text, c.desiredWidth);
-		c.color = _colFormats[i].color ? *_colFormats[i].color : _options.textColor;
-		c.alignment = _colFormats[i].alignment ? *_colFormats[i].alignment : _options.alignment;
+		c.color = _cols[i].color ? *_cols[i].color : _options.textColor;
+		c.alignment = _cols[i].alignment ? *_cols[i].alignment : _options.alignment;
 	}
 	_rows.push_back(r);
 }
@@ -354,7 +321,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		const Column& c = _cols[i];
-		if (c.type == ColType::fixed) {
+		if (c.requestedWidth > 0) {
 			inner[i] = c.requestedWidth;
 			requiredWidth += c.requestedWidth;
 			fixedWidth += c.requestedWidth;
@@ -374,7 +341,7 @@ std::vector<int> Table::computeWidths(const int w) const
 	if (requiredWidth >= w) {
 		// Nothing we can do.
 		for (size_t i = 0; i < _cols.size(); ++i) {
-			if (_cols[i].type == ColType::flex) {
+			if (_cols[i].requestedWidth == 0) {
 				inner[i] = kMinWidth;
 			}
 		}
@@ -386,7 +353,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	std::vector<int> dynCols;
 	for (size_t i = 0; i < _cols.size(); ++i) {
-		if (_cols[i].type == ColType::flex) {
+		if (_cols[i].requestedWidth == 0) {
 			if (inner[i] <= grant) {
 				avail -= inner[i];
 			}

@@ -39,8 +39,6 @@ enum class Color : uint8_t {
     brightCyan,
 
     white,
-
-	kDefault, // same as reset - the "default" color which
     reset,
 };
 
@@ -69,26 +67,16 @@ enum class Alignment {
     center,
 };
 
-enum class ColType {
-    flex,       // as wide as needed
-    fixed, 	    // specified width
-};
-
 struct Column {
-    ColType type = ColType::flex;
-    int requestedWidth = 0;
+    int requestedWidth = 0;     // flex width
+    std::optional<Color> color;
+    std::optional<Alignment> alignment;
 };
 
 struct ColumnFormat {
     std::optional<Color> color;
     std::optional<Alignment> alignment;
 };
-
-struct ColumnLook {
-    std::optional<Color> color;
-    std::optional<Alignment> alignment;
-};
-
 
 struct TableOptions {
     bool outerBorder = true;                    // true to draw the outer border
@@ -102,19 +90,19 @@ struct TableOptions {
     int  maxWidth = -1;                         // positive will use that value; <=0 will use console width
     int  indent = 0;                            // number of spaces to indent the table (reduces width)
     
-    Color tableColor = Color::kDefault;         // color of the table border and dividers
-    Color textColor = Color::kDefault;		    // default color of the text - can be overridden for individual cells
+    Color tableColor = Color::reset;         // color of the table border and dividers
+    Color textColor = Color::reset;		    // default color of the text - can be overridden for individual cells
     Alignment alignment = Alignment::left;	    // default alignment of the text - can be overridden for individual cells
 };
 
 /*
 *   1. Construct a Table with TableOptions. (See TableOptions for features that can be set.)
 *   2. Optional: Set the column format with setColumns(). You can specify columns to be
-*      fixed width or flex width. If you don't setColumFormat(), all columns will be flex.
-*   3. Add text rows with addRow(). The number of columns must match the number of columns in the format.
-*   4. Optional: Set the color and alignment of individual cells, rows, columns, or the entire table.
-*      Use setCell(), setRow(), setColumn(), and setTable(). Again, the number of columns must match
-*      in all calls.
+*      fixed or flex width, and optionally set per-column color and alignment inline.
+*      If you don't call setColumns(), all columns will be flex with default color/alignment.
+*   3. Add text rows with addRow(). Column count must match across all calls.
+*   4. Optional: Adjust color/alignment after the fact with setColumnColor(),
+*      setColumnAlignment(), or setColumnLook(). These affect future addRow() calls.
 *   5. Call format() to get the formatted table as a string, or print() to print it to the console,
 *      or use the << operator to print it to an ostream.
 */
@@ -128,21 +116,15 @@ public:
     // Add a row of text.
     void addRow(const std::vector<std::string>& row);
 
-    // Set the number and sizing policy of the columns.
-    // This affects the entire table.
+    // Initially set the number and sizing policy of the columns.
     void setColumns(const std::vector<Column>& cols);
 
-	// Set the color of the columns. A nullopt means to use the default color.
-    // This will change the formatting of future addRow() calls.
-    void setColumnColor(const std::vector<std::optional<Color>>& cols);
-
-	// Set the alignment of the columns. A nullopt means to use the default alignment.
-	// Affects future addRow() calls.
-    void setColumnAlignment(const std::vector<std::optional<Alignment>>& cols);
-
-	// Set both the color and alignment of the columns. A nullopt means to use the default value.
+    // Set both the color and alignment of the columns. A nullopt means to use the default value.
 	// This will change the formatting of future addRow() calls.
-	void setColumnLook(const std::vector<ColumnLook>& cols);
+	void updateColumns(const std::vector<ColumnFormat>& cols);
+
+	// Just set the colors. Changes the formatting of future addRow() calls.
+	void updateColumns(const std::vector<Color>& colors);
 
     // Return the table as a string.
     std::string format() const;
@@ -211,7 +193,7 @@ private:
 		std::string text;
         int desiredWidth = 0;
         int nLines = 0;
-        Color color = Color::kDefault;
+        Color color = Color::reset;
         Alignment alignment = Alignment::left;
 	};
 
@@ -226,8 +208,6 @@ private:
 
     TableOptions _options;
     std::vector<Column> _cols;
-	std::vector<ColumnFormat> _colFormats;
-	std::vector<ColumnLook> _colLooks;
     std::vector<std::vector<Cell>> _rows;
 
     std::vector<int> computeWidths(const int width) const;   // returns inner column sizes for the given width
