@@ -121,18 +121,26 @@ public:
     // (Width is established by setComlumns() and can't be changed.)
     // Requires columns to already be established via setColumns() or addRow().
     // Changes affect future addRow() calls.
-    void updateColumns(const std::vector<Column>& cols);
+    void updateColumns(const std::vector<Column>& columns);
 
     // Update just the colors of columns.
     // Requires columns to already be established via setColumns() or addRow().
     // Changes affect future addRow() calls.
     void updateColumns(const std::vector<std::optional<Color>>& colors);
 
-    // Conventience method of updateColumns()
-    void updateColumn(size_t i, const std::vector<Column>& cols);
+    // Update just the colors of columns.
+    // Requires columns to already be established via setColumns() or addRow().
+    // Changes affect future addRow() calls.
+    void updateColumns(const std::vector<std::optional<Alignment>>& alignments);
 
-	// Conventience method of updateColumns()
-	void updateColumn(size_t i, const std::optional<Color>& color);
+    // Convenience method of updateColumns()
+    void updateColumn(size_t i, const Column& column);
+
+	// Convenience method of updateColumns()
+    void updateColumn(size_t i, const std::optional<Color>& color);
+
+    // Convenience method of updateColumns()
+    void updateColumn(size_t i, const std::optional<Alignment>& alignment);
 
     // Reset to the defalut values in the TableOptions.
 	// Changes affect future addRow() calls.
