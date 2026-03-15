@@ -68,30 +68,25 @@ enum class Alignment {
 };
 
 struct Column {
-    int requestedWidth = 0;     // 0 = flex (auto-sized), >0 = fixed width
-    std::optional<Color> color;
-    std::optional<Alignment> alignment;
-};
-
-struct ColumnFormat {
+    int width = 0;                      // 0 = flex (auto-sized), >0 = fixed width
     std::optional<Color> color;
     std::optional<Alignment> alignment;
 };
 
 struct TableOptions {
-    bool outerBorder = true;                    // true to draw the outer border
-    bool innerHDivider = true;				    // true to draw horizontal dividers between rows
-    bool innerVDivider = true;				    // true to draw vertical dividers between columns
+    bool border = true;                         // true to draw the outer border
+    bool hDivider = true;				        // true to draw horizontal dividers between rows
+    bool vDivider = true;				        // true to draw vertical dividers between columns
 
-    char borderHChar = '-';                     // specify characters for the border
-    char borderVChar = '|';                     // specify characters for the border
-    char borderCornerChar = '+';                // specify characters for the border
+    char hChar = '-';                           // specify characters for the border
+    char vChar = '|';                           // specify characters for the border
+    char cornerChar = '+';                      // specify characters for the border
     
     int  maxWidth = -1;                         // positive will use that value; <=0 will use console width
     int  indent = 0;                            // number of spaces to indent the table (reduces width)
     
-    Color tableColor = Color::reset;         // color of the table border and dividers
-    Color textColor = Color::reset;		    // default color of the text - can be overridden for individual cells
+    Color tableColor = Color::reset;            // color of the table border and dividers
+    Color textColor = Color::reset;		        // default color of the text - can be overridden for individual cells
     Alignment alignment = Alignment::left;	    // default alignment of the text - can be overridden for individual cells
 };
 
@@ -122,16 +117,20 @@ public:
     // Initially set the number and sizing policy of the columns.
     void setColumns(const std::vector<Column>& cols);
 
-    // Update the color and alignment of columns. A nullopt field means use the table default.
-    // An empty vector clears all color/alignment overrides.
+	// Update the color and alignment of columns. 
+    // (Width is established by setComlumns() and can't be changed.)
     // Requires columns to already be established via setColumns() or addRow().
     // Changes affect future addRow() calls.
-    void updateColumns(const std::vector<ColumnFormat>& cols);
+    void updateColumns(const std::vector<Column>& cols);
 
-    // Update just the colors of columns. An empty vector clears all color overrides.
+    // Update just the colors of columns.
     // Requires columns to already be established via setColumns() or addRow().
     // Changes affect future addRow() calls.
     void updateColumns(const std::vector<Color>& colors);
+
+    // Reset to the defalut values in the TableOptions.
+	// Changes affect future addRow() calls.
+    void resetColumns();
 
     // Return the table as a string.
     std::string format() const;

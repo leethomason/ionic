@@ -205,25 +205,25 @@ void append(std::string& s, char a, char b, char c)
 
 void Table::printLeft(std::string& s) const
 {
-	if (_options.outerBorder) {
+	if (_options.border) {
 		Dye dye(_options.tableColor, s);
-		append(s, _options.borderVChar, ' ');
+		append(s, _options.vChar, ' ');
 	}
 }
 
 void Table::printRight(std::string& s) const
 {
-	if (_options.outerBorder) {
+	if (_options.border) {
 		Dye dye(_options.tableColor, s);
-		append(s, ' ', _options.borderVChar);
+		append(s, ' ', _options.vChar);
 	}
 }
 
 void Table::printCenter(std::string& s) const
 {
 	Dye dye(_options.tableColor, s);
-	if (_options.innerVDivider)
-		append(s, ' ', _options.borderVChar, ' ');
+	if (_options.vDivider)
+		append(s, ' ', _options.vChar, ' ');
 	else
 		append(s, ' ', ' ');
 }
@@ -240,16 +240,9 @@ void Table::setColumns(const std::vector<Column>& cols)
 	}
 }
 
-void Table::updateColumns(const std::vector<ColumnFormat>& formats)
+void Table::updateColumns(const std::vector<Column>& formats)
 {
-	assert(formats.empty() || _cols.size() == formats.size());
-	if (formats.empty()) {
-		for (size_t i = 0; i < _cols.size(); ++i) {
-			_cols[i].color = std::nullopt;
-			_cols[i].alignment = std::nullopt;
-		}
-		return;
-	}
+	assert(_cols.size() == formats.size());
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		_cols[i].color = formats[i].color;
 		_cols[i].alignment = formats[i].alignment;
@@ -258,17 +251,18 @@ void Table::updateColumns(const std::vector<ColumnFormat>& formats)
 
 void Table::updateColumns(const std::vector<Color>& colors)
 {
-	assert(colors.empty() || _cols.size() == colors.size());
-	if (colors.empty()) {
-		for (size_t i = 0; i < _cols.size(); ++i) {
-			_cols[i].color = std::nullopt;
-		}
-		return;
-	}
+	assert(_cols.size() == colors.size());
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		_cols[i].color = colors[i];
 	}
 }
+
+void Table::resetColumns()
+{
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i] = Column{ _cols[i].width };
+	}
+}	
 
 /*static*/ int Table::nLines(const std::string& s, int& maxWidth)
 {
@@ -321,10 +315,10 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		const Column& c = _cols[i];
-		if (c.requestedWidth > 0) {
-			inner[i] = c.requestedWidth;
-			requiredWidth += c.requestedWidth;
-			fixedWidth += c.requestedWidth;
+		if (c.width > 0) {
+			inner[i] = c.width;
+			requiredWidth += c.width;
+			fixedWidth += c.width;
 		}
 		else {
 			for (size_t j = 0; j < _rows.size(); ++j) {
@@ -341,7 +335,7 @@ std::vector<int> Table::computeWidths(const int w) const
 	if (requiredWidth >= w) {
 		// Nothing we can do.
 		for (size_t i = 0; i < _cols.size(); ++i) {
-			if (_cols[i].requestedWidth == 0) {
+			if (_cols[i].width == 0) {
 				inner[i] = kMinWidth;
 			}
 		}
@@ -353,7 +347,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	std::vector<int> dynCols;
 	for (size_t i = 0; i < _cols.size(); ++i) {
-		if (_cols[i].requestedWidth == 0) {
+		if (_cols[i].width == 0) {
 			if (inner[i] <= grant) {
 				avail -= inner[i];
 			}
@@ -461,10 +455,10 @@ void Table::print() const
 
 std::vector<int> Table::getInnerColWidths() const
 {
-	int vDivWidth = _options.innerVDivider ? 3 : 2;
+	int vDivWidth = _options.vDivider ? 3 : 2;
 	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : consoleWidth();
 	int innerWidth = outerWidth - _options.indent;
-	if (_options.outerBorder)
+	if (_options.border)
 		innerWidth -= 2 * 2;	// 2 for each border
 	innerWidth -= vDivWidth * (int(_cols.size()) - 1);
 	return computeWidths(innerWidth);
@@ -606,9 +600,9 @@ std::vector<std::string> Table::formatRows() const
 
 void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const
 {
-	if (outer && !_options.outerBorder)
+	if (outer && !_options.border)
 		return;
-	if (!outer && !_options.innerHDivider)
+	if (!outer && !_options.hDivider)
 		return;
 
 	std::string buf;
@@ -616,19 +610,19 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 	{
 		buf.append(_options.indent, ' ');
 		Dye dye(_options.tableColor, buf);
-		if (_options.outerBorder) {
+		if (_options.border) {
 			for (size_t c = 0; c < _cols.size(); ++c) {
-				if (c == 0 || _options.innerVDivider)
-					buf += _options.borderCornerChar;
-				buf.append(2 + innerColWidth[c], _options.borderHChar);
+				if (c == 0 || _options.vDivider)
+					buf += _options.cornerChar;
+				buf.append(2 + innerColWidth[c], _options.hChar);
 			}
-			buf += _options.borderCornerChar;
+			buf += _options.cornerChar;
 		}
 		else {
-			buf.append(1 + innerColWidth[0], _options.borderHChar);
+			buf.append(1 + innerColWidth[0], _options.hChar);
 			for (size_t c = 1; c < _cols.size(); ++c) {
-				buf += _options.borderCornerChar;
-				buf.append(2 + innerColWidth[c], _options.borderHChar);
+				buf += _options.cornerChar;
+				buf.append(2 + innerColWidth[c], _options.hChar);
 			}
 		}
 	}

@@ -24,18 +24,18 @@ void AddVar4Rows(ionic::Table& table)
 void PrintDiffs(const ionic::TableOptions& options)
 {
 	ionic::TableOptions def;
-	if (options.outerBorder != def.outerBorder)
-		std::cout << "outerBorder: " << options.outerBorder << std::endl;
-	if (options.innerHDivider != def.innerHDivider)
-		std::cout << "innerHDivider: " << options.innerHDivider << std::endl;
-	if (options.innerVDivider != def.innerVDivider)
-		std::cout << "innerVDivider: " << options.innerVDivider << std::endl;
-	if (options.borderHChar != def.borderHChar)
-		std::cout << "borderHChar: " << options.borderHChar << std::endl;
-	if (options.borderVChar != def.borderVChar)
-		std::cout << "borderVChar: " << options.borderVChar << std::endl;
-	if (options.borderCornerChar != def.borderCornerChar)
-		std::cout << "borderCornerChar: " << options.borderCornerChar << std::endl;
+	if (options.border != def.border)
+		std::cout << "outerBorder: " << options.border << std::endl;
+	if (options.hDivider != def.hDivider)
+		std::cout << "innerHDivider: " << options.hDivider << std::endl;
+	if (options.vDivider != def.vDivider)
+		std::cout << "innerVDivider: " << options.vDivider << std::endl;
+	if (options.hChar != def.hChar)
+		std::cout << "borderHChar: " << options.hChar << std::endl;
+	if (options.vChar != def.vChar)
+		std::cout << "borderVChar: " << options.vChar << std::endl;
+	if (options.cornerChar != def.cornerChar)
+		std::cout << "borderCornerChar: " << options.cornerChar << std::endl;
 	if (options.maxWidth != def.maxWidth)
 		std::cout << "maxWidth: " << options.maxWidth << std::endl;
 	if (options.tableColor != def.tableColor)
@@ -57,8 +57,8 @@ void Print6()
 	}
 	{
 		ionic::TableOptions options;
-		options.outerBorder = false;
-		options.innerHDivider = true;
+		options.border = false;
+		options.hDivider = true;
 		PrintDiffs(options);
 
 		ionic::Table table(options);
@@ -68,8 +68,8 @@ void Print6()
 	}
 	{
 		ionic::TableOptions options;
-		options.outerBorder = true;
-		options.innerHDivider = false;
+		options.border = true;
+		options.hDivider = false;
 		PrintDiffs(options);
 
 		ionic::Table table(options);
@@ -79,8 +79,8 @@ void Print6()
 	}
 	{
 		ionic::TableOptions options;
-		options.outerBorder = false;
-		options.innerHDivider = false;
+		options.border = false;
+		options.hDivider = false;
 		PrintDiffs(options);
 
 		ionic::Table table(options);
@@ -90,9 +90,9 @@ void Print6()
 	}
 	{
 		ionic::TableOptions options;
-		options.outerBorder = true;
-		options.innerHDivider = false;
-		options.innerVDivider = false;
+		options.border = true;
+		options.hDivider = false;
+		options.vDivider = false;
 		PrintDiffs(options);
 
 		ionic::Table table(options);
@@ -102,9 +102,9 @@ void Print6()
 	}
 	{
 		ionic::TableOptions options;
-		options.outerBorder = false;
-		options.innerHDivider = false;
-		options.innerVDivider = false;
+		options.border = false;
+		options.hDivider = false;
+		options.vDivider = false;
 		PrintDiffs(options);
 
 		ionic::Table table(options);
@@ -247,8 +247,8 @@ bool IonicTest::test()
 		// I saw a bug with 2 column tables, but could never reproduce it.
 		// Adding a test just in case.
 		ionic::TableOptions options;
-		options.outerBorder = false;
-		options.innerHDivider = false;
+		options.border = false;
+		options.hDivider = false;
 
 		ionic::Table t(options);
 		t.addRow({ "AA", "Hello" });
@@ -335,7 +335,7 @@ bool IonicTest::test()
 	}
 	{
 		ionic::TableOptions options;
-		options.innerHDivider = false;
+		options.hDivider = false;
 		ionic::Table table(options);
 		table.setColumns({ {2}, {0}, {0} });
 		table.addRow({ "0", "A", "The Outer World" });
@@ -456,9 +456,9 @@ int main(int argc, const char* argv[])
 		}
 		{
 			ionic::TableOptions options;
-			options.borderHChar = '=';
-			options.borderVChar = 'I';
-			options.borderCornerChar = 'O';
+			options.hChar = '=';
+			options.vChar = 'I';
+			options.cornerChar = 'O';
 			ionic::Table t(options);;
 			t.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
 			t.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
