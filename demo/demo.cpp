@@ -363,12 +363,6 @@ bool IonicTest::test()
 
 int main(int argc, const char* argv[])
 {
-	bool printAllTests = false;
-	for (int i = 0; i < argc; ++i) {
-		if (std::string("-v") == argv[i])
-			printAllTests = true;
-	}
-
 	bool okay = ionic::IonicTest::test();
 	if (okay)
 		std::cout << "All tests passed.\n";
@@ -379,7 +373,7 @@ int main(int argc, const char* argv[])
 
 	Print6();
 
-	if (printAllTests) {
+	{
 		ionic::TableOptions options;
 		options.maxWidth = 50;
 		ionic::Table t5(options);
@@ -392,6 +386,42 @@ int main(int argc, const char* argv[])
 		t5.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
 		t5.print();
 		PrintRuler(options.maxWidth);
+	}
+	{
+		ionic::TableOptions options;
+		options.maxWidth = 80;
+		ionic::Table t(options);
+		t.setColumns({ {1}, {4}, {0}, {0}, {0} });
+		t.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
+		t.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
+		t.print();
+		PrintRuler(options.maxWidth);
+	}
+	{
+		ionic::Table t6;
+		t6.setColumns({ {1}, {4}, {0}, {0}, {0} });
+		t6.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
+		t6.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
+		t6.print();
+	}
+	{
+		ionic::TableOptions options;
+		options.hChar = '=';
+		options.vChar = 'I';
+		options.cornerChar = 'O';
+		ionic::Table t(options);;
+		t.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
+		t.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
+		t.print();
+	}
+	{
+		ionic::TableOptions options;
+		options.indent = 4;
+		ionic::Table t(options);
+		t.setColumns({ {15} });
+		t.addRow({ "123456789012345" });
+		t.addRow({ "It was a bright cold day in April, and the clocks were striking thirteen." });
+		std::cout << t;
 	}
 	{
 		ionic::TableOptions options;
@@ -435,44 +465,5 @@ int main(int argc, const char* argv[])
 		t.print();
 	}
 
-	if (printAllTests) {
-		// These are useful if really changing code, but noisy to look at.
-		{
-			ionic::TableOptions options;
-			options.maxWidth = 80;
-			ionic::Table t(options);
-			t.setColumns({ {1}, {4}, {0}, {0}, {0} });
-			t.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
-			t.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
-			t.print();
-			PrintRuler(options.maxWidth);
-		}
-		{
-			ionic::Table t6;
-			t6.setColumns({ {1}, {4}, {0}, {0}, {0} });
-			t6.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
-			t6.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
-			t6.print();
-		}
-		{
-			ionic::TableOptions options;
-			options.hChar = '=';
-			options.vChar = 'I';
-			options.cornerChar = 'O';
-			ionic::Table t(options);;
-			t.addRow({ "1", "4", "Dyn", "Dyn", "Dyn" });
-			t.addRow({ "a", "TooLong", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Hello", "It was a bright cold day in April, and the clocks were striking thirteen." });
-			t.print();
-		}
-		{
-			ionic::TableOptions options;
-			options.indent = 4;
-			ionic::Table t(options);
-			t.setColumns({ {15} });
-			t.addRow({ "123456789012345" });
-			t.addRow({ "It was a bright cold day in April, and the clocks were striking thirteen." });
-			std::cout << t;
-		}
-	}
 	return okay ? 0 : 1;
 }
