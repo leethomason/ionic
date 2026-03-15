@@ -46,15 +46,8 @@ set_target_properties(ionic PROPERTIES
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADERS}")
 
-# Only build tests if this is the top-level project
+# Only build the demo if this is the top-level project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    enable_testing()
-
-    add_test(
-      NAME ionic_test
-      COMMAND ionic_test
-    )
-
-    add_executable(ionic_test "test/test.cpp")  
-    target_link_libraries(ionic_test ionic)
+    add_executable(ionic_demo "demo/demo.cpp")  
+    target_link_libraries(ionic_demo ionic)
 endif()
