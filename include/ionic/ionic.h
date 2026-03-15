@@ -126,7 +126,13 @@ public:
     // Update just the colors of columns.
     // Requires columns to already be established via setColumns() or addRow().
     // Changes affect future addRow() calls.
-    void updateColumns(const std::vector<Color>& colors);
+    void updateColumns(const std::vector<std::optional<Color>>& colors);
+
+    // Conventience method of updateColumns()
+    void updateColumn(size_t i, const std::vector<Column>& cols);
+
+	// Conventience method of updateColumns()
+	void updateColumn(size_t i, const std::optional<Color>& color);
 
     // Reset to the defalut values in the TableOptions.
 	// Changes affect future addRow() calls.

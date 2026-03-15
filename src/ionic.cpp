@@ -249,12 +249,25 @@ void Table::updateColumns(const std::vector<Column>& formats)
 	}
 }
 
-void Table::updateColumns(const std::vector<Color>& colors)
+void Table::updateColumns(const std::vector<std::optional<Color>>& colors)
 {
 	assert(_cols.size() == colors.size());
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		_cols[i].color = colors[i];
 	}
+}
+
+void Table::updateColumn(size_t i, const std::vector<Column>& formats)
+{
+	assert(i < _cols.size());
+	_cols[i].color = formats[i].color;
+	_cols[i].alignment = formats[i].alignment;
+}
+
+void Table::updateColumn(size_t i, const std::optional<Color>& color)
+{
+	assert(i < _cols.size());
+	_cols[i].color = color;
 }
 
 void Table::resetColumns()
