@@ -115,7 +115,9 @@ public:
     Table(const TableOptions& options = TableOptions()) : _options(options) {}
 
     // Add a row of text.
-    void addRow(const std::vector<std::string>& row);
+    // If 'color' is specified, it applies to the row, but NOT future rows. This is
+    // to make headers and similar easier.
+    void addRow(const std::vector<std::string>& row, std::optional<Color> color = std::nullopt);
 
     // Initially set the number and sizing policy of the columns.
     void setColumns(const std::vector<Column>& cols);

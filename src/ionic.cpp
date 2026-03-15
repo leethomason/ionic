@@ -288,7 +288,7 @@ void Table::updateColumns(const std::vector<Color>& colors)
 	return n;
 }
 
-void Table::addRow(const std::vector<std::string>& row)
+void Table::addRow(const std::vector<std::string>& row, std::optional<Color> color)
 {
 	if (_cols.empty()) {
 		std::vector<Column> cvec;
@@ -305,7 +305,7 @@ void Table::addRow(const std::vector<std::string>& row)
 		trimRight(c.text);		// right trailing spaces are presumably extraneous
 
 		c.nLines = nLines(c.text, c.desiredWidth);
-		c.color = _cols[i].color ? *_cols[i].color : _options.textColor;
+		c.color = color ? *color : (_cols[i].color ? *_cols[i].color : _options.textColor);
 		c.alignment = _cols[i].alignment ? *_cols[i].alignment : _options.alignment;
 	}
 	_rows.push_back(r);
