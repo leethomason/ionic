@@ -133,6 +133,13 @@ public:
 
     // Return the table as a string.
     std::string format() const;
+
+    // Return each row as a formatted string.
+    // The first row includes the top border, and the last row includes the bottom border.
+    // An individual row will (generally) be the separator above and the row text, with
+    // left and right boders.
+    std::vector<std::string> formatRows() const;
+
     // Output the table to the console.
     void print() const;
 
@@ -145,6 +152,8 @@ public:
     // -- Query -- //
     int nRows() const { return static_cast<int>(_rows.size()); }
     int nCols() const { return static_cast<int>(_cols.size()); }
+
+    const std::vector<Column>& getColumns() const { return _cols; }
 
     // -- Constants --
     static constexpr char kWhitespace[] = " \t\n\r";
@@ -216,6 +225,8 @@ private:
     std::vector<std::vector<Cell>> _rows;
 
     std::vector<int> computeWidths(const int width) const;   // returns inner column sizes for the given width
+    std::vector<int> getInnerColWidths() const;              // computes inner column widths from current options
+    std::string formatRow(size_t r, const std::vector<int>& innerColWidth) const;
 
     void printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const;
     void printLeft(std::string& s) const;

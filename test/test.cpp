@@ -2,6 +2,7 @@
 #include "ionic/ionic.h"
 
 #include <iostream>
+#include <numeric>
 #include <assert.h>
 
 void PrintRuler(int w)
@@ -255,6 +256,7 @@ bool IonicTest::test()
 		std::string result = t.format();
 		printf("2 col result: \n%s\n", result.c_str());
 		TEST(result == "AA | Hello\nBB | World\n");
+
 	}
 	{
 		std::string t = ionic::Table::colorize(ionic::Color::red, "Hello");
@@ -285,6 +287,76 @@ bool IonicTest::test()
 		TEST(ionic::strToColor("default") == Color::reset);
 		TEST(ionic::strToColor("foobar") == Color::reset);
 	}
+	{
+		ionic::Table table;
+		table.setColumns({ {2}, {0}, {0} });
+		table.addRow({ "0", "A", "The Outer World" });
+		table.addRow({ "1", "Hello", "And Another" });
+		table.addRow({ "2", "World", "Farther Out" });
+		std::string r = table.format();
+
+		std::string expected =
+			"+----+-------+-----------------+\n"
+			"| 0  | A     | The Outer World |\n"
+			"+----+-------+-----------------+\n"
+			"| 1  | Hello | And Another     |\n"
+			"+----+-------+-----------------+\n"
+			"| 2  | World | Farther Out     |\n"
+			"+----+-------+-----------------+\n";
+
+		TEST(r == expected);
+
+		std::vector<std::string> rows = table.formatRows();
+		std::string total = std::accumulate(rows.begin(), rows.end(), std::string());
+		TEST(total == expected);
+	}
+	{
+		ionic::Table table;
+		table.setColumns({ {2}, {0}, {0} });
+		table.addRow({ "0", "A", "The Outer World" });
+		table.addRow({ "1", "Hello", "And Another" });
+		table.addRow({ "2", "World", "Farther Out" });
+		std::string r = table.format();
+
+		std::string expected =
+			"+----+-------+-----------------+\n"
+			"| 0  | A     | The Outer World |\n"
+			"+----+-------+-----------------+\n"
+			"| 1  | Hello | And Another     |\n"
+			"+----+-------+-----------------+\n"
+			"| 2  | World | Farther Out     |\n"
+			"+----+-------+-----------------+\n";
+
+		TEST(r == expected);
+
+		std::vector<std::string> rows = table.formatRows();
+		std::string total = std::accumulate(rows.begin(), rows.end(), std::string());
+		TEST(total == expected);
+	}
+	{
+		ionic::TableOptions options;
+		options.innerHDivider = false;
+		ionic::Table table(options);
+		table.setColumns({ {2}, {0}, {0} });
+		table.addRow({ "0", "A", "The Outer World" });
+		table.addRow({ "1", "Hello", "And Another" });
+		table.addRow({ "2", "World", "Farther Out" });
+		std::string r = table.format();
+
+		std::string expected =
+			"+----+-------+-----------------+\n"
+			"| 0  | A     | The Outer World |\n"
+			"| 1  | Hello | And Another     |\n"
+			"| 2  | World | Farther Out     |\n"
+			"+----+-------+-----------------+\n";
+
+		TEST(r == expected);
+
+		std::vector<std::string> rows = table.formatRows();
+		std::string total = std::accumulate(rows.begin(), rows.end(), std::string());
+		TEST(total == expected);
+	}
+
 	return true;
 }
 }
