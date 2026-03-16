@@ -63,12 +63,12 @@ int Table::consoleWidth()
 	return w;
 #elif  __APPLE__
     struct winsize w;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    return w.ws_col;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    return w.ws_col > 0 ? w.ws_col : 80;
 #elif __linux__
 	struct winsize w;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-	return w.ws_col;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+	return w.ws_col > 0 ? w.ws_col : 80;
 #else
 #	error "Not implemented"
 #endif // _WIN32
@@ -103,7 +103,6 @@ std::string colorCode(Color c)
 	case Color::brightCyan: return "\x1B[96m";
 	case Color::white: return "\x1B[97m";
 
-	case Color::kDefault: return "\033[0m";	// the reset value
 	case Color::reset: return "\033[0m"; // reset again
 	}
 	return "";
@@ -128,7 +127,6 @@ std::string colorToStr(Color color)
 	case Color::brightMagenta: return "brightMagenta";
 	case Color::brightCyan: return "brightCyan";
 	case Color::white: return "white";
-	case Color::kDefault: return "default";
 	case Color::reset: return "reset";
 	}
 	return "reset";
@@ -183,12 +181,12 @@ Color strToColor(const std::string& _str)
 
 Table::Dye::Dye(Color c, std::string& s) : _c(c), _s(s)
 {
-	if (_c != Color::kDefault && Table::colorEnabled)
+	if (_c != Color::reset && Table::colorEnabled)
 		_s += colorCode(c);
 }
 
 Table::Dye::~Dye() {
-	if (_c != Color::kDefault && Table::colorEnabled)
+	if (_c != Color::reset && Table::colorEnabled)
 		_s += colorCode(Color::reset);
 }
 
@@ -207,33 +205,92 @@ void append(std::string& s, char a, char b, char c)
 
 void Table::printLeft(std::string& s) const
 {
-	if (_options.outerBorder) {
+	if (_options.border) {
 		Dye dye(_options.tableColor, s);
-		append(s, _options.borderVChar, ' ');
+		append(s, _options.vChar, ' ');
 	}
 }
 
 void Table::printRight(std::string& s) const
 {
-	if (_options.outerBorder) {
+	if (_options.border) {
 		Dye dye(_options.tableColor, s);
-		append(s, ' ', _options.borderVChar);
+		append(s, ' ', _options.vChar);
 	}
 }
 
 void Table::printCenter(std::string& s) const
 {
 	Dye dye(_options.tableColor, s);
-	if (_options.innerVDivider)
-		append(s, ' ', _options.borderVChar, ' ');
+	if (_options.vDivider)
+		append(s, ' ', _options.vChar, ' ');
 	else
 		append(s, ' ', ' ');
 }
 
-void Table::setColumnFormat(const std::vector<Table::Column>& cols)
+void Table::setColumns(const std::vector<Column>& cols)
 {
-	_cols = cols;
+	if (_cols.empty()) {
+		_cols = cols;
+		return;
+	}
+	assert(cols.size() == _cols.size());
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i] = cols[i];
+	}
 }
+
+void Table::updateColumns(const std::vector<Column>& formats)
+{
+	assert(_cols.size() == formats.size());
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i].color = formats[i].color;
+		_cols[i].alignment = formats[i].alignment;
+	}
+}
+
+void Table::updateColumns(const std::vector<std::optional<Color>>& colors)
+{
+	assert(_cols.size() == colors.size());
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i].color = colors[i];
+	}
+}
+
+void Table::updateColumns(const std::vector<std::optional<Alignment>>& alignments)
+{
+	assert(_cols.size() == alignments.size());
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i].alignment = alignments[i];
+	}
+}
+
+void Table::updateColumn(size_t i, const Column& col)
+{
+	assert(i < _cols.size());
+	_cols[i].color = col.color;
+	_cols[i].alignment = col.alignment;
+}
+
+void Table::updateColumn(size_t i, const std::optional<Color>& color)
+{
+	assert(i < _cols.size());
+	_cols[i].color = color;
+}
+
+
+void Table::updateColumn(size_t i, const std::optional<Alignment>& alignment)
+{
+	assert(i < _cols.size());
+	_cols[i].alignment = alignment;
+}
+
+void Table::resetColumns()
+{
+	for (size_t i = 0; i < _cols.size(); ++i) {
+		_cols[i] = Column{ _cols[i].width };
+	}
+}	
 
 /*static*/ int Table::nLines(const std::string& s, int& maxWidth)
 {
@@ -253,12 +310,12 @@ void Table::setColumnFormat(const std::vector<Table::Column>& cols)
 	return n;
 }
 
-void Table::addRow(const std::vector<std::string>& row)
+void Table::addRow(const std::vector<std::string>& row, std::optional<Color> color)
 {
 	if (_cols.empty()) {
-		std::vector<Table::Column> cvec;
-		cvec.resize(row.size(), Column{ ColType::flex, 0 });
-		setColumnFormat(cvec);
+		std::vector<Column> cvec;
+		cvec.resize(row.size(), Column{ 0 });
+		setColumns(cvec);
 	}
 	assert(row.size() == _cols.size());
 	
@@ -270,42 +327,10 @@ void Table::addRow(const std::vector<std::string>& row)
 		trimRight(c.text);		// right trailing spaces are presumably extraneous
 
 		c.nLines = nLines(c.text, c.desiredWidth);
-		c.color = _options.textColor;
-		c.alignment = _options.alignment;
+		c.color = color ? *color : (_cols[i].color ? *_cols[i].color : _options.textColor);
+		c.alignment = _cols[i].alignment ? *_cols[i].alignment : _options.alignment;
 	}
 	_rows.push_back(r);
-}
-
-void Table::setCell(int row, int col, std::optional<Color> color, std::optional<Alignment> alignment)
-{
-	Cell& cell = _rows[row][col];
-	if (color) {
-		cell.color = *color;
-	}
-	if (alignment) {
-		cell.alignment = *alignment;
-	}
-}
-
-void Table::setRow(int row, std::optional<Color> color, std::optional<Alignment> alignment)
-{
-	for (size_t c = 0; c < _rows[row].size(); ++c) {
-		setCell(row, int(c), color, alignment);
-	}
-}
-
-void Table::setColumn(int col, std::optional<Color> color, std::optional<Alignment> alignment)
-{
-	for (size_t r = 0; r < _rows.size(); ++r) {
-		setCell(int(r), col, color, alignment);
-	}
-}
-
-void Table::setTable(std::optional<Color> color, std::optional<Alignment> alignment)
-{
-	for (size_t r = 0; r < _rows.size(); ++r) {
-		setRow(int(r), color, alignment);
-	}
 }
 
 std::vector<int> Table::computeWidths(const int w) const
@@ -318,10 +343,10 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	for (size_t i = 0; i < _cols.size(); ++i) {
 		const Column& c = _cols[i];
-		if (c.type == ColType::fixed) {
-			inner[i] = c.requestedWidth;
-			requiredWidth += c.requestedWidth;
-			fixedWidth += c.requestedWidth;
+		if (c.width > 0) {
+			inner[i] = c.width;
+			requiredWidth += c.width;
+			fixedWidth += c.width;
 		}
 		else {
 			for (size_t j = 0; j < _rows.size(); ++j) {
@@ -338,7 +363,7 @@ std::vector<int> Table::computeWidths(const int w) const
 	if (requiredWidth >= w) {
 		// Nothing we can do.
 		for (size_t i = 0; i < _cols.size(); ++i) {
-			if (_cols[i].type == ColType::flex) {
+			if (_cols[i].width == 0) {
 				inner[i] = kMinWidth;
 			}
 		}
@@ -350,7 +375,7 @@ std::vector<int> Table::computeWidths(const int w) const
 
 	std::vector<int> dynCols;
 	for (size_t i = 0; i < _cols.size(); ++i) {
-		if (_cols[i].type == ColType::flex) {
+		if (_cols[i].width == 0) {
 			if (inner[i] <= grant) {
 				avail -= inner[i];
 			}
@@ -456,6 +481,90 @@ void Table::print() const
 	std::cout << format();
 }
 
+std::vector<int> Table::getInnerColWidths() const
+{
+	int vDivWidth = _options.vDivider ? 3 : 2;
+	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : consoleWidth();
+	int innerWidth = outerWidth - _options.indent;
+	if (_options.border)
+		innerWidth -= 2 * 2;	// 2 for each border
+	innerWidth -= vDivWidth * (int(_cols.size()) - 1);
+	return computeWidths(innerWidth);
+}
+
+std::string Table::formatRow(size_t r, const std::vector<int>& innerColWidth) const
+{
+	std::string out;
+
+	std::vector<std::vector<Break>> breaks;
+	breaks.resize(_cols.size());
+	for (size_t c = 0; c < _cols.size(); ++c) {
+		breaks[c] = wordWrap(_rows[r][c].text, innerColWidth[c]);
+	}
+
+	bool done = false;
+	size_t line = 0;
+	while (!done) {
+		done = true;
+		out.append(_options.indent, ' ');
+		printLeft(out);
+
+		for (size_t c = 0; c < _cols.size(); ++c) {
+			if (c > 0)
+				printCenter(out);
+
+			std::string view;
+			if (line < breaks[c].size()) {
+				if (line + 1 < breaks[c].size())
+					done = false;
+				const std::string& str = _rows[r][c].text;
+				view = str.substr(
+					breaks[c][line].start,
+					breaks[c][line].end - breaks[c][line].start);
+			}
+
+			assert(innerColWidth[c] >= 0);
+			size_t width = innerColWidth[c];
+			{
+				Dye dye(_rows[r][c].color, out);
+				Alignment align = _rows[r][c].alignment;
+
+				if (view.size() <= width) {
+					// It's only where the text fits that the alignment matters.
+					if (align == Alignment::left) {
+						out += view;
+						out.append(width - view.size(), ' ');
+					}
+					else if (align == Alignment::right) {
+						out.append(width - view.size(), ' ');
+						out += view;
+					}
+					else if (align == Alignment::center) {
+						int left = int(width - view.size()) / 2;
+						out.append(left, ' ');
+						out += view;
+						out.append(width - left - view.size(), ' ');
+					}
+				}
+				else {
+					const std::string ellipsis = kEllipsis;
+					if (width <= ellipsis.size()) {
+						out += ellipsis.substr(0, width);
+					}
+					else {
+						out += view.substr(0, width - ellipsis.size());
+						out += ellipsis;
+					}
+				}
+			}
+		}
+		++line;
+		printRight(out);
+		out += '\n';
+	}
+	return out;
+}
+
 std::string Table::format() const
 {
 	std::string out;
@@ -463,16 +572,6 @@ std::string Table::format() const
 		return out;
 	}
 
-	int vDivWidth = _options.innerVDivider ? 3 : 2;
-
-	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : consoleWidth();
-	int innerWidth = outerWidth - _options.indent;
-	if (_options.outerBorder)
-		innerWidth -= 2 * 2;	// 2 for each border
-	innerWidth -= vDivWidth * (int(_cols.size()) - 1);	// 3 for each inner border
-
-	std::vector<int> innerColWidth = computeWidths(innerWidth);
-	
 	/*
 		Fixed(1), Dynamic, Wrap
 		Inner
@@ -482,97 +581,56 @@ std::string Table::format() const
 		+---+-------+-----------------+
 		| 1 | Hello | And Another     |
 		+---+-------+-----------------+ extra y
-	
+
 	*/
 
+	std::vector<int> innerColWidth = getInnerColWidths();
+	int outerWidth = _options.maxWidth > 0 ? _options.maxWidth : consoleWidth();
 	out.reserve(outerWidth * _rows.size() * 2);	// rough guess
 
 	printHorizontalBorder(out, innerColWidth, true);
 
 	for (size_t r = 0; r < _rows.size(); ++r) {
-		std::vector<std::vector<Break>> breaks;
-		breaks.resize(_cols.size());
-		for (size_t c = 0; c < _cols.size(); ++c) {
-			const std::string& s = _rows[r][c].text;
-			breaks[c] = wordWrap(s, innerColWidth[c]);
-		}
-
-		bool done = false;
-		size_t line = 0;
-		while (!done) {
-			done = true;
-			out.append(_options.indent, ' ');
-			printLeft(out);
-
-			for (size_t c = 0; c < _cols.size(); ++c) {
-				if (c > 0)
-					printCenter(out);
-
-				std::string view;
-				if (line < breaks[c].size()) {
-					if (line + 1 < breaks[c].size())
-						done = false;
-					const std::string& str = _rows[r][c].text;
-					view = str.substr(
-						breaks[c][line].start,
-						breaks[c][line].end - breaks[c][line].start);
-				}
-
-				assert(innerColWidth[c] >= 0);
-				size_t width = innerColWidth[c];
-				{
-					Dye dye(_rows[r][c].color, out);
-					Alignment align = _rows[r][c].alignment;
-
-					if (view.size() <= width) {
-						// It's only where the text fits that the alignment matters.
-						if (align == Alignment::left) {
-							out += view;
-							out.append(width - view.size(), ' ');
-						}
-						else if (align == Alignment::right) {
-							out.append(width - view.size(), ' ');
-							out += view;
-						}
-						else if (align == Alignment::center) {
-							int left = int(width - view.size()) / 2;
-							out.append(left, ' ');
-							out += view;
-							out.append(width - left - view.size(), ' ');
-						}
-					}
-					else {
-						const std::string ellipsis = kEllipsis;
-						if (width <= ellipsis.size()) {
-							out += ellipsis.substr(0, width);
-						}
-						else {
-							out += view.substr(0, width - ellipsis.size());
-							out += ellipsis;
-						}
-					}
-				}
-			}
-			++line;
-			printRight(out);
-			out += '\n';
-		}
+		out += formatRow(r, innerColWidth);
 		if (r + 1 < _rows.size()) {
 			printHorizontalBorder(out, innerColWidth, false);
 		}
 	}
 
 	printHorizontalBorder(out, innerColWidth, true);
-	
+
 	return out;
+}
+
+std::vector<std::string> Table::formatRows() const
+{
+	std::vector<std::string> result;
+	if (_cols.empty() || _rows.empty()) {
+		return result;
+	}
+
+	std::vector<int> innerColWidth = getInnerColWidths();
+	result.reserve(_rows.size());
+	for (size_t r = 0; r < _rows.size(); ++r) {
+		std::string s;
+		// First row gets the top (outer) border; subsequent rows get the inner separator.
+		printHorizontalBorder(s, innerColWidth, r == 0);
+		s += formatRow(r, innerColWidth);
+		// Last row gets the bottom (outer) border.
+		if (r + 1 == _rows.size()) {
+			printHorizontalBorder(s, innerColWidth, true);
+		}
+		result.push_back(std::move(s));
+	}
+	return result;
 }
 
 
 void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const
 {
-	if (outer && !_options.outerBorder)
+	if (outer && !_options.border)
 		return;
-	if (!outer && !_options.innerHDivider)
+	if (!outer && !_options.hDivider)
 		return;
 
 	std::string buf;
@@ -580,19 +638,19 @@ void Table::printHorizontalBorder(std::string& s, const std::vector<int>& innerC
 	{
 		buf.append(_options.indent, ' ');
 		Dye dye(_options.tableColor, buf);
-		if (_options.outerBorder) {
+		if (_options.border) {
 			for (size_t c = 0; c < _cols.size(); ++c) {
-				if (c == 0 || _options.innerVDivider)
-					buf += _options.borderCornerChar;
-				buf.append(2 + innerColWidth[c], _options.borderHChar);
+				if (c == 0 || _options.vDivider)
+					buf += _options.cornerChar;
+				buf.append(2 + innerColWidth[c], _options.hChar);
 			}
-			buf += _options.borderCornerChar;
+			buf += _options.cornerChar;
 		}
 		else {
-			buf.append(1 + innerColWidth[0], _options.borderHChar);
+			buf.append(1 + innerColWidth[0], _options.hChar);
 			for (size_t c = 1; c < _cols.size(); ++c) {
-				buf += _options.borderCornerChar;
-				buf.append(2 + innerColWidth[c], _options.borderHChar);
+				buf += _options.cornerChar;
+				buf.append(2 + innerColWidth[c], _options.hChar);
 			}
 		}
 	}

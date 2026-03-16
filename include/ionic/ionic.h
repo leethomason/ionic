@@ -39,8 +39,6 @@ enum class Color : uint8_t {
     brightCyan,
 
     white,
-
-	kDefault, // same as reset - the "default" color which
     reset,
 };
 
@@ -69,35 +67,38 @@ enum class Alignment {
     center,
 };
 
-enum class ColType {
-    flex,       // as wide as needed
-    fixed, 	    // specified width
+struct Column {
+    int width = 0;                      // 0 = flex (auto-sized), >0 = fixed width
+    std::optional<Color> color;
+    std::optional<Alignment> alignment;
 };
 
 struct TableOptions {
-    bool outerBorder = true;                    // true to draw the outer border
-    bool innerHDivider = true;				    // true to draw horizontal dividers between rows
-    bool innerVDivider = true;				    // true to draw vertical dividers between columns
+    bool border = true;                         // true to draw the outer border
+    bool hDivider = true;				        // true to draw horizontal dividers between rows
+    bool vDivider = true;				        // true to draw vertical dividers between columns
 
-    char borderHChar = '-';                     // specify characters for the border
-    char borderVChar = '|';                     // specify characters for the border
-    char borderCornerChar = '+';                // specify characters for the border
+    char hChar = '-';                           // specify characters for the border
+    char vChar = '|';                           // specify characters for the border
+    char cornerChar = '+';                      // specify characters for the border
     
     int  maxWidth = -1;                         // positive will use that value; <=0 will use console width
     int  indent = 0;                            // number of spaces to indent the table (reduces width)
     
-    Color tableColor = Color::kDefault;         // color of the table border and dividers
-    Color textColor = Color::kDefault;		    // default color of the text - can be overridden for individual cells
+    Color tableColor = Color::reset;            // color of the table border and dividers
+    Color textColor = Color::reset;		        // default color of the text - can be overridden for individual cells
     Alignment alignment = Alignment::left;	    // default alignment of the text - can be overridden for individual cells
 };
 
 /*
 *   1. Construct a Table with TableOptions. (See TableOptions for features that can be set.)
-*   2. Optional: Set the column format with setColumnFormat(). You can specify columns to be
-*      fixed width or flex width. If you don't setColumFormat(), all columns will be flex.
-*   3. Add text rows with addRow(). The number of columns must match the number of columns in the format.
-*   4. Optional: Set the color and alignment of individual cells, rows, columns, or the entire table.
-*      Use setCell(), setRow(), setColumn(), and setTable().
+*   2. Optional: Set the column format with setColumns(). You can specify columns to be
+*      fixed or flex width, and optionally set per-column color and alignment inline.
+*      If you don't call setColumns(), all columns will be flex with default color/alignment.
+*   3. Add text rows with addRow(). Column count must match across all calls.
+*   4. Optional: Adjust color/alignment after the fact with updateColumns().
+*      Changes affect future addRow() calls. Requires setColumns() or addRow() to have
+*      been called first to establish the column count.
 *   5. Call format() to get the formatted table as a string, or print() to print it to the console,
 *      or use the << operator to print it to an ostream.
 */
@@ -108,21 +109,56 @@ public:
 
     Table(const TableOptions& options = TableOptions()) : _options(options) {}
 
-    struct Column {
-        ColType type = ColType::flex;
-        int requestedWidth = 0;
-    };
-    void setColumnFormat(const std::vector<Column>& cols);
-    void addRow(const std::vector<std::string>& row);
+    // Add a row of text.
+    // If 'color' is specified, it applies to the row, but NOT future rows. This is
+    // to make headers and similar easier.
+    void addRow(const std::vector<std::string>& row, std::optional<Color> color = std::nullopt);
 
-    void setCell(int row, int col, std::optional<Color>, std::optional<Alignment>);
-    void setRow(int row, std::optional<Color>, std::optional<Alignment>);
-    void setColumn(int col, std::optional<Color>, std::optional<Alignment>);
-    void setTable(std::optional<Color>, std::optional<Alignment>);
+    // Initially set the number and sizing policy of the columns.
+    void setColumns(const std::vector<Column>& cols);
 
+	// Update the color and alignment of columns. 
+    // (Width is established by setComlumns() and can't be changed.)
+    // Requires columns to already be established via setColumns() or addRow().
+    // Changes affect future addRow() calls.
+    void updateColumns(const std::vector<Column>& columns);
+
+    // Update just the colors of columns.
+    // Requires columns to already be established via setColumns() or addRow().
+    // Changes affect future addRow() calls.
+    void updateColumns(const std::vector<std::optional<Color>>& colors);
+
+    // Update just the colors of columns.
+    // Requires columns to already be established via setColumns() or addRow().
+    // Changes affect future addRow() calls.
+    void updateColumns(const std::vector<std::optional<Alignment>>& alignments);
+
+    // Convenience method of updateColumns()
+    void updateColumn(size_t i, const Column& column);
+
+	// Convenience method of updateColumns()
+    void updateColumn(size_t i, const std::optional<Color>& color);
+
+    // Convenience method of updateColumns()
+    void updateColumn(size_t i, const std::optional<Alignment>& alignment);
+
+    // Reset to the defalut values in the TableOptions.
+	// Changes affect future addRow() calls.
+    void resetColumns();
+
+    // Return the table as a string.
     std::string format() const;
+
+    // Return each row as a formatted string.
+    // The first row includes the top border, and the last row includes the bottom border.
+    // An individual row will (generally) be the separator above and the row text, with
+    // left and right boders.
+    std::vector<std::string> formatRows() const;
+
+    // Output the table to the console.
     void print() const;
 
+    // Output the table to the std out.
     friend std::ostream& operator<<(std::ostream& os, const Table& t) {
         os << t.format();
         return os;
@@ -131,6 +167,8 @@ public:
     // -- Query -- //
     int nRows() const { return static_cast<int>(_rows.size()); }
     int nCols() const { return static_cast<int>(_cols.size()); }
+
+    const std::vector<Column>& getColumns() const { return _cols; }
 
     // -- Constants --
     static constexpr char kWhitespace[] = " \t\n\r";
@@ -184,7 +222,7 @@ private:
 		std::string text;
         int desiredWidth = 0;
         int nLines = 0;
-        Color color = Color::kDefault;
+        Color color = Color::reset;
         Alignment alignment = Alignment::left;
 	};
 
@@ -202,6 +240,8 @@ private:
     std::vector<std::vector<Cell>> _rows;
 
     std::vector<int> computeWidths(const int width) const;   // returns inner column sizes for the given width
+    std::vector<int> getInnerColWidths() const;              // computes inner column widths from current options
+    std::string formatRow(size_t r, const std::vector<int>& innerColWidth) const;
 
     void printHorizontalBorder(std::string& s, const std::vector<int>& innerColWidth, bool outer) const;
     void printLeft(std::string& s) const;
